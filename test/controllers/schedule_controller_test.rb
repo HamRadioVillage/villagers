@@ -169,7 +169,7 @@ class ScheduleControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     # Unqualified users see the qualification requirement, not a sign up button
     assert_match "Test Cert qualification required", response.body
-    assert_no_match(/Sign Up/, response.body.gsub(/Sign Up.*?for/, '')) # Exclude nav text
+    assert_no_match(/Sign Up/, response.body.gsub(/Sign Up.*?for/, "")) # Exclude nav text
   end
 
   test "sign up button shown for qualified user" do
