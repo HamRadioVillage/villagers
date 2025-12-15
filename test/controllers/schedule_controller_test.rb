@@ -119,7 +119,7 @@ class ScheduleControllerTest < ActionDispatch::IntegrationTest
     sign_in @volunteer
     get conference_schedule_url(@conference)
     assert_response :success
-    assert_match "Test Cert required", response.body
+    assert_match "Test Cert qualification required", response.body
     assert_match "slot-unqualified", response.body
   end
 
@@ -143,7 +143,7 @@ class ScheduleControllerTest < ActionDispatch::IntegrationTest
     sign_in @volunteer
     get conference_schedule_url(@conference)
     assert_response :success
-    assert_no_match(/Test Cert required/, response.body)
+    assert_no_match(/Test Cert qualification required/, response.body)
     # Check that no actual table cells have the unqualified class (not the CSS definition)
     assert_no_match(/<td class="schedule-cell slot-unqualified">/, response.body)
   end
@@ -167,7 +167,9 @@ class ScheduleControllerTest < ActionDispatch::IntegrationTest
     sign_in @volunteer
     get conference_schedule_url(@conference)
     assert_response :success
-    assert_match "Not qualified", response.body
+    # Unqualified users see the qualification requirement, not a sign up button
+    assert_match "Test Cert qualification required", response.body
+    assert_no_match(/Sign Up/, response.body.gsub(/Sign Up.*?for/, '')) # Exclude nav text
   end
 
   test "sign up button shown for qualified user" do
@@ -190,8 +192,8 @@ class ScheduleControllerTest < ActionDispatch::IntegrationTest
     sign_in @volunteer
     get conference_schedule_url(@conference)
     assert_response :success
-    # Should show Sign Up button, not "Not qualified"
-    assert_no_match(/Not qualified/, response.body)
+    # Should show Sign Up button, not qualification requirement
+    assert_no_match(/Test Cert qualification required/, response.body)
   end
 
   test "schedule respects conference-specific qualification removals" do
@@ -221,7 +223,7 @@ class ScheduleControllerTest < ActionDispatch::IntegrationTest
     get conference_schedule_url(@conference)
     assert_response :success
     # User should be treated as unqualified for this conference
-    assert_match "Test Cert required", response.body
+    assert_match "Test Cert qualification required", response.body
     assert_match "slot-unqualified", response.body
   end
 
@@ -250,8 +252,8 @@ class ScheduleControllerTest < ActionDispatch::IntegrationTest
     sign_in @volunteer
     get conference_schedule_url(@conference)
     assert_response :success
-    assert_match "Cert A required", response.body
-    assert_match "Cert B required", response.body
+    assert_match "Cert A qualification required", response.body
+    assert_match "Cert B qualification required", response.body
   end
 
   test "schedule shows qualified state when user has all required qualifications" do
@@ -281,8 +283,8 @@ class ScheduleControllerTest < ActionDispatch::IntegrationTest
     sign_in @volunteer
     get conference_schedule_url(@conference)
     assert_response :success
-    assert_no_match(/Cert A required/, response.body)
-    assert_no_match(/Cert B required/, response.body)
+    assert_no_match(/Cert A qualification required/, response.body)
+    assert_no_match(/Cert B qualification required/, response.body)
     # Check that no actual table cells have the unqualified class (not the CSS definition)
     assert_no_match(/<td class="schedule-cell slot-unqualified">/, response.body)
   end

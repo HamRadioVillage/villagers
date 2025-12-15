@@ -77,13 +77,11 @@
                             <div class="d-flex align-items-center flex-wrap gap-1">
                               <% if user_lacks_qualifications && !is_user_signed_up %>
                                 <% missing_quals.each do |qual| %>
-                                  <span class="badge bg-secondary qualification-pill"><%= qual.name %> required</span>
+                                  <span class="badge bg-secondary qualification-pill"><%= qual.name %> qualification required</span>
                                 <% end %>
                               <% end %>
                               <% if is_user_signed_up %>
                                 <span class="badge bg-primary">You're signed up</span>
-                              <% elsif user_lacks_qualifications %>
-                                <span class="badge bg-light text-muted">Not qualified</span>
                               <% elsif slot_data[:full] %>
                                 <span class="badge bg-success">Full</span>
                               <% elsif slot_data[:signed_up_count] == 0 %>
