@@ -57,21 +57,21 @@ Rails.application.configure do
   config.action_mailer.raise_delivery_errors = true
 
   # Set host to be used by links generated in mailer templates.
-  # Configure via MAILER_HOST environment variable.
-  config.action_mailer.default_url_options = { host: ENV.fetch("MAILER_HOST", "example.com") }
+  # Configure via APP_HOST environment variable.
+  config.action_mailer.default_url_options = { host: ENV.fetch("APP_HOST", "example.com") }
 
-  # Email delivery configuration via SMTP.
-  # Configure via environment variables or Rails credentials.
-  config.action_mailer.delivery_method = :smtp
+  # Email delivery configuration via Mailgun API.
+  # Required environment variables:
+  #   MAILGUN_API_KEY - Your Mailgun API key
+  #   MAILGUN_DOMAIN  - Your Mailgun sending domain
+  # Optional:
+  #   MAILGUN_REGION  - "us" (default) or "eu"
+  config.action_mailer.delivery_method = :mailgun
   config.action_mailer.perform_deliveries = true
-  config.action_mailer.smtp_settings = {
-    address: ENV.fetch("SMTP_ADDRESS", Rails.application.credentials.dig(:smtp, :address)),
-    port: ENV.fetch("SMTP_PORT", Rails.application.credentials.dig(:smtp, :port) || 587).to_i,
-    domain: ENV.fetch("SMTP_DOMAIN", Rails.application.credentials.dig(:smtp, :domain)),
-    user_name: ENV.fetch("SMTP_USERNAME", Rails.application.credentials.dig(:smtp, :user_name)),
-    password: ENV.fetch("SMTP_PASSWORD", Rails.application.credentials.dig(:smtp, :password)),
-    authentication: ENV.fetch("SMTP_AUTHENTICATION", Rails.application.credentials.dig(:smtp, :authentication) || "plain"),
-    enable_starttls_auto: true
+  config.action_mailer.mailgun_settings = {
+    api_key: ENV.fetch("MAILGUN_API_KEY", nil),
+    domain: ENV.fetch("MAILGUN_DOMAIN", nil),
+    region: ENV.fetch("MAILGUN_REGION", "us")
   }
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to

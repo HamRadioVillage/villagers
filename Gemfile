@@ -35,6 +35,9 @@ gem "csv"
 # Calendar export (iCal/ICS)
 gem "icalendar"
 
+# Email delivery via Mailgun API
+gem "mailgun-ruby", "~> 1.2"
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 
