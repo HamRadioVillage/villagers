@@ -19,6 +19,12 @@ class ScheduleController < ApplicationController
     # Get all programs for this conference
     @programs = @conference.programs.order(:name)
 
+    # Build qualification data for programs
+    @program_qualifications = build_program_qualifications
+
+    # Build user's effective qualifications for this conference
+    @user_qualification_ids = build_user_qualification_ids
+
     # Get all users for admin dropdown
     @users = User.order(:email) if @can_see_all_volunteers
   end
@@ -77,5 +83,25 @@ class ScheduleController < ApplicationController
     end
 
     slots
+  end
+
+  # Build a hash of program_id => [qualifications] for efficient lookup
+  def build_program_qualifications
+    program_ids = @conference.conference_programs.pluck(:program_id)
+    Program.where(id: program_ids)
+           .includes(:qualifications)
+           .index_by(&:id)
+           .transform_values(&:qualifications)
+  end
+
+  # Build a set of qualification IDs the user effectively has for this conference
+  # (i.e., qualifications they have minus any removed for this conference)
+  def build_user_qualification_ids
+    user_qual_ids = current_user.user_qualifications.pluck(:qualification_id).to_set
+    removed_qual_ids = current_user.qualification_removals
+                                   .where(conference: @conference)
+                                   .pluck(:qualification_id)
+                                   .to_set
+    user_qual_ids - removed_qual_ids
   end
 end

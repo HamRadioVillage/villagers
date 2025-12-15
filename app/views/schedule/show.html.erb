@@ -49,9 +49,16 @@
                     <% slot_data = program_data[:timeslots][time_slot] %>
                     <%
                       cell_class = "schedule-cell"
+                      # Check qualification requirements for this program
+                      program_quals = @program_qualifications[program_id] || []
+                      missing_quals = program_quals.reject { |q| @user_qualification_ids.include?(q.id) }
+                      user_lacks_qualifications = missing_quals.any?
+
                       if slot_data
                         is_user_signed_up = @user_signups.include?(slot_data[:timeslot].id)
-                        if is_user_signed_up
+                        if user_lacks_qualifications && !is_user_signed_up
+                          cell_class += " slot-unqualified"
+                        elsif is_user_signed_up
                           cell_class += " user-signed-up"
                         elsif slot_data[:full]
                           cell_class += " slot-full"
@@ -66,10 +73,19 @@
                       <% if slot_data %>
                         <% is_user_signed_up = @user_signups.include?(slot_data[:timeslot].id) %>
                         <div class="schedule-slot">
+                          <% if user_lacks_qualifications && !is_user_signed_up %>
+                            <div class="qualification-required mb-1">
+                              <% missing_quals.each do |qual| %>
+                                <span class="badge bg-secondary"><%= qual.name %> required</span>
+                              <% end %>
+                            </div>
+                          <% end %>
                           <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
                             <div class="d-flex align-items-center">
                               <% if is_user_signed_up %>
                                 <span class="badge bg-primary">You're signed up</span>
+                              <% elsif user_lacks_qualifications %>
+                                <span class="badge bg-light text-muted">Not qualified</span>
                               <% elsif slot_data[:full] %>
                                 <span class="badge bg-success">Full</span>
                               <% elsif slot_data[:signed_up_count] == 0 %>
@@ -87,7 +103,7 @@
                                     conference_volunteer_signup_path(@conference, current_user.volunteer_signups.find_by(timeslot: slot_data[:timeslot])),
                                     data: { turbo_method: :delete, turbo_confirm: "Cancel this shift?" },
                                     class: "btn btn-sm btn-outline-danger" %>
-                              <% elsif !slot_data[:full] %>
+                              <% elsif !slot_data[:full] && !user_lacks_qualifications %>
                                 <%= form_with url: conference_volunteer_signups_path(@conference), method: :post, local: true, class: "d-inline" do |form| %>
                                   <%= hidden_field_tag :timeslot_id, slot_data[:timeslot].id %>
                                   <%= form.submit "Sign Up", class: "btn btn-sm btn-primary" %>
@@ -204,6 +220,16 @@
 
   .schedule-cell.slot-partial {
     background-color: #fff3cd;
+  }
+
+  .schedule-cell.slot-unqualified {
+    background-color: #e9ecef;
+    opacity: 0.7;
+  }
+
+  .qualification-required .badge {
+    font-size: 0.7rem;
+    font-weight: normal;
   }
 
   .schedule-slot {
