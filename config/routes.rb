@@ -35,7 +35,6 @@ Rails.application.routes.draw do
     resources :conference_programs, except: [ :new ], path: "programs"
     resources :custom_programs, only: [ :new, :create, :edit, :update, :destroy ]
     resources :conference_roles, only: [ :create, :destroy ]
-    get "calendar", to: "calendar#show", as: :calendar
     get "schedule", to: "schedule#show", as: :schedule
     get "leaderboard", to: "leaderboard#conference", as: :leaderboard
     resources :volunteer_signups, only: [ :index, :create, :destroy ]

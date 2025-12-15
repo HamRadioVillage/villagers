@@ -123,7 +123,6 @@
             <%= link_to "My Shifts", conference_volunteer_signups_path(@conference), class: "btn btn-primary" %>
             <%= link_to "Leaderboard", conference_leaderboard_path(@conference), class: "btn btn-outline-primary" %>
             <%= link_to "View Schedule", conference_schedule_path(@conference), class: "btn btn-outline-primary" %>
-            <%= link_to "View Calendar", conference_calendar_path(@conference), class: "btn btn-outline-primary" %>
             <% if policy(@conference).update? %>
               <%= link_to "Dashboard", conference_dashboard_path(@conference), class: "btn btn-warning" %>
               <%= link_to "Manage Programs", conference_conference_programs_path(@conference), class: "btn btn-success" %>
