@@ -99,4 +99,193 @@ class ScheduleControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     # Schedule should show each day of the conference
   end
+
+  test "schedule shows qualification required pill for unqualified user" do
+    qualification = Qualification.create!(
+      name: "Test Cert",
+      description: "A test certification",
+      village: @village
+    )
+    ProgramQualification.create!(program: @program, qualification: qualification)
+
+    # Create a timeslot for the program
+    Timeslot.create!(
+      conference_program: @conference_program,
+      start_time: @conference.start_date.to_datetime + 9.hours,
+      max_volunteers: 2,
+      current_volunteers_count: 0
+    )
+
+    sign_in @volunteer
+    get conference_schedule_url(@conference)
+    assert_response :success
+    assert_match "Test Cert qualification required", response.body
+    assert_match "slot-unqualified", response.body
+  end
+
+  test "schedule does not show qualification pill for qualified user" do
+    qualification = Qualification.create!(
+      name: "Test Cert",
+      description: "A test certification",
+      village: @village
+    )
+    ProgramQualification.create!(program: @program, qualification: qualification)
+    UserQualification.create!(user: @volunteer, qualification: qualification)
+
+    # Create a timeslot for the program
+    Timeslot.create!(
+      conference_program: @conference_program,
+      start_time: @conference.start_date.to_datetime + 9.hours,
+      max_volunteers: 2,
+      current_volunteers_count: 0
+    )
+
+    sign_in @volunteer
+    get conference_schedule_url(@conference)
+    assert_response :success
+    assert_no_match(/Test Cert qualification required/, response.body)
+    # Check that no actual table cells have the unqualified class (not the CSS definition)
+    assert_no_match(/<td class="schedule-cell slot-unqualified">/, response.body)
+  end
+
+  test "sign up button hidden for unqualified user" do
+    qualification = Qualification.create!(
+      name: "Test Cert",
+      description: "A test certification",
+      village: @village
+    )
+    ProgramQualification.create!(program: @program, qualification: qualification)
+
+    # Create a timeslot for the program
+    Timeslot.create!(
+      conference_program: @conference_program,
+      start_time: @conference.start_date.to_datetime + 9.hours,
+      max_volunteers: 2,
+      current_volunteers_count: 0
+    )
+
+    sign_in @volunteer
+    get conference_schedule_url(@conference)
+    assert_response :success
+    # Unqualified users see the qualification requirement, not a sign up button
+    assert_match "Test Cert qualification required", response.body
+    assert_no_match(/Sign Up/, response.body.gsub(/Sign Up.*?for/, "")) # Exclude nav text
+  end
+
+  test "sign up button shown for qualified user" do
+    qualification = Qualification.create!(
+      name: "Test Cert",
+      description: "A test certification",
+      village: @village
+    )
+    ProgramQualification.create!(program: @program, qualification: qualification)
+    UserQualification.create!(user: @volunteer, qualification: qualification)
+
+    # Create a timeslot for the program
+    Timeslot.create!(
+      conference_program: @conference_program,
+      start_time: @conference.start_date.to_datetime + 9.hours,
+      max_volunteers: 2,
+      current_volunteers_count: 0
+    )
+
+    sign_in @volunteer
+    get conference_schedule_url(@conference)
+    assert_response :success
+    # Should show Sign Up button, not qualification requirement
+    assert_no_match(/Test Cert qualification required/, response.body)
+  end
+
+  test "schedule respects conference-specific qualification removals" do
+    qualification = Qualification.create!(
+      name: "Test Cert",
+      description: "A test certification",
+      village: @village
+    )
+    ProgramQualification.create!(program: @program, qualification: qualification)
+    UserQualification.create!(user: @volunteer, qualification: qualification)
+    # Remove the qualification for this specific conference
+    QualificationRemoval.create!(
+      user: @volunteer,
+      qualification: qualification,
+      conference: @conference
+    )
+
+    # Create a timeslot for the program
+    Timeslot.create!(
+      conference_program: @conference_program,
+      start_time: @conference.start_date.to_datetime + 9.hours,
+      max_volunteers: 2,
+      current_volunteers_count: 0
+    )
+
+    sign_in @volunteer
+    get conference_schedule_url(@conference)
+    assert_response :success
+    # User should be treated as unqualified for this conference
+    assert_match "Test Cert qualification required", response.body
+    assert_match "slot-unqualified", response.body
+  end
+
+  test "schedule shows multiple missing qualifications" do
+    qual1 = Qualification.create!(
+      name: "Cert A",
+      description: "First certification",
+      village: @village
+    )
+    qual2 = Qualification.create!(
+      name: "Cert B",
+      description: "Second certification",
+      village: @village
+    )
+    ProgramQualification.create!(program: @program, qualification: qual1)
+    ProgramQualification.create!(program: @program, qualification: qual2)
+
+    # Create a timeslot for the program
+    Timeslot.create!(
+      conference_program: @conference_program,
+      start_time: @conference.start_date.to_datetime + 9.hours,
+      max_volunteers: 2,
+      current_volunteers_count: 0
+    )
+
+    sign_in @volunteer
+    get conference_schedule_url(@conference)
+    assert_response :success
+    assert_match "Cert A qualification required", response.body
+    assert_match "Cert B qualification required", response.body
+  end
+
+  test "schedule shows qualified state when user has all required qualifications" do
+    qual1 = Qualification.create!(
+      name: "Cert A",
+      description: "First certification",
+      village: @village
+    )
+    qual2 = Qualification.create!(
+      name: "Cert B",
+      description: "Second certification",
+      village: @village
+    )
+    ProgramQualification.create!(program: @program, qualification: qual1)
+    ProgramQualification.create!(program: @program, qualification: qual2)
+    UserQualification.create!(user: @volunteer, qualification: qual1)
+    UserQualification.create!(user: @volunteer, qualification: qual2)
+
+    # Create a timeslot for the program
+    Timeslot.create!(
+      conference_program: @conference_program,
+      start_time: @conference.start_date.to_datetime + 9.hours,
+      max_volunteers: 2,
+      current_volunteers_count: 0
+    )
+
+    sign_in @volunteer
+    get conference_schedule_url(@conference)
+    assert_response :success
+    assert_no_match(/Cert A qualification required/, response.body)
+    assert_no_match(/Cert B qualification required/, response.body)
+    # Check that no actual table cells have the unqualified class (not the CSS definition)
+    assert_no_match(/<td class="schedule-cell slot-unqualified">/, response.body)
+  end
 end
