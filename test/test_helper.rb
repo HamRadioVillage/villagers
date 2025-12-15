@@ -16,6 +16,17 @@ module ActiveSupport
   end
 end
 
+# Auto-confirm users created in tests (for Devise confirmable)
+class User
+  before_create :auto_confirm_in_test
+
+  private
+
+  def auto_confirm_in_test
+    self.confirmed_at ||= Time.current if Rails.env.test?
+  end
+end
+
 # Include Devise test helpers
 class ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
