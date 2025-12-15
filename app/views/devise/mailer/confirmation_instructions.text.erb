@@ -1,0 +1,12 @@
+Villagers - Confirm your email address
+======================================
+
+Welcome to Villagers!
+
+Please confirm your email address by visiting the link below:
+
+<%= confirmation_url(@resource, confirmation_token: @token) %>
+
+This link will expire in <%= distance_of_time_in_words(Devise.confirm_within) %>.
+
+If you didn't create an account with Villagers, you can safely ignore this email.
