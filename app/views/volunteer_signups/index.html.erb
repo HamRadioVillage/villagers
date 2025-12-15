@@ -8,7 +8,7 @@
           <% end %>
           <h1 class="mb-0">My Shifts - <%= @conference.name %></h1>
         </div>
-        <%= link_to "View Calendar", conference_calendar_path(@conference), class: "btn btn-primary" %>
+        <%= link_to "View Schedule", conference_schedule_path(@conference), class: "btn btn-primary" %>
       </div>
     </div>
   </div>
@@ -59,7 +59,7 @@
       <div class="col-12">
         <div class="alert alert-info">
           <h5>No Shifts Yet</h5>
-          <p class="mb-0">You haven't signed up for any shifts yet. <%= link_to "View the calendar", conference_calendar_path(@conference) %> to find available timeslots.</p>
+          <p class="mb-0">You haven't signed up for any shifts yet. <%= link_to "View the schedule", conference_schedule_path(@conference) %> to find available timeslots.</p>
         </div>
       </div>
     </div>
