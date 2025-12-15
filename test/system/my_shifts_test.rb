@@ -75,10 +75,16 @@ class MyShiftsTest < ApplicationSystemTestCase
     login_as @user
     visit conference_path(@conference)
 
-    # Wait for the page to fully load before clicking
-    assert_text @conference.name
-    click_link "My Shifts"
+    # Wait for the conference show page to fully load by checking for the My Shifts button
+    assert_selector "a.btn", text: "My Shifts"
 
+    # Click the My Shifts button and wait for navigation
+    find("a.btn", text: "My Shifts", match: :first).click
+
+    # Wait for navigation to complete - the URL should change
+    assert_current_path conference_volunteer_signups_path(@conference)
+
+    # Verify we're on the My Shifts page
     assert_text "My Shifts - #{@conference.name}"
   end
 end
