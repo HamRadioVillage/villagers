@@ -75,13 +75,12 @@
                         <div class="schedule-slot">
                           <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
                             <div class="d-flex align-items-center flex-wrap gap-1">
-                              <% if user_lacks_qualifications && !is_user_signed_up %>
+                              <% if is_user_signed_up %>
+                                <span class="badge bg-primary">You're signed up</span>
+                              <% elsif user_lacks_qualifications %>
                                 <% missing_quals.each do |qual| %>
                                   <span class="badge bg-secondary qualification-pill"><%= qual.name %> qualification required</span>
                                 <% end %>
-                              <% end %>
-                              <% if is_user_signed_up %>
-                                <span class="badge bg-primary">You're signed up</span>
                               <% elsif slot_data[:full] %>
                                 <span class="badge bg-success">Full</span>
                               <% elsif slot_data[:signed_up_count] == 0 %>
