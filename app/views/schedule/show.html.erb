@@ -73,15 +73,13 @@
                       <% if slot_data %>
                         <% is_user_signed_up = @user_signups.include?(slot_data[:timeslot].id) %>
                         <div class="schedule-slot">
-                          <% if user_lacks_qualifications && !is_user_signed_up %>
-                            <div class="qualification-required mb-1">
-                              <% missing_quals.each do |qual| %>
-                                <span class="badge bg-secondary"><%= qual.name %> required</span>
-                              <% end %>
-                            </div>
-                          <% end %>
                           <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
-                            <div class="d-flex align-items-center">
+                            <div class="d-flex align-items-center flex-wrap gap-1">
+                              <% if user_lacks_qualifications && !is_user_signed_up %>
+                                <% missing_quals.each do |qual| %>
+                                  <span class="badge bg-secondary qualification-pill"><%= qual.name %> required</span>
+                                <% end %>
+                              <% end %>
                               <% if is_user_signed_up %>
                                 <span class="badge bg-primary">You're signed up</span>
                               <% elsif user_lacks_qualifications %>
@@ -226,7 +224,7 @@
     background-color: #dee2e6;
   }
 
-  .qualification-required .badge {
+  .qualification-pill {
     font-size: 0.7rem;
     font-weight: normal;
   }
