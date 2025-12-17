@@ -312,4 +312,106 @@ class ConferencesControllerTest < ActionDispatch::IntegrationTest
     assert past1.archived?
     assert past2.archived?
   end
+
+  # Volunteered pill tests
+  test "index shows Volunteered pill for conference with user signups" do
+    # Create program and conference program
+    program = Program.create!(name: "Test Program", village: @village)
+    conference_program = ConferenceProgram.create!(
+      conference: @conference,
+      program: program,
+      day_schedules: {}
+    )
+
+    # Create a timeslot
+    timeslot = Timeslot.create!(
+      conference_program: conference_program,
+      start_time: @conference.start_date.to_datetime + 10.hours,
+      max_volunteers: 5
+    )
+
+    # Create volunteer signup for the volunteer user
+    VolunteerSignup.create!(user: @volunteer, timeslot: timeslot)
+
+    sign_in @volunteer
+    get conferences_url
+
+    assert_response :success
+    assert_select "span.badge.bg-success", text: "Volunteered"
+  end
+
+  test "index does not show Volunteered pill for conference without user signups" do
+    sign_in @volunteer
+    get conferences_url
+
+    assert_response :success
+    assert_select "span.badge.bg-success", text: "Volunteered", count: 0
+  end
+
+  test "index shows Volunteered pill only for conferences where user has signups" do
+    # Create second conference without signups
+    other_conference = Conference.create!(
+      village: @village,
+      name: "Other Conference",
+      start_date: Date.today + 10.days,
+      end_date: Date.today + 12.days
+    )
+
+    # Create program and conference program for first conference
+    program = Program.create!(name: "Test Program", village: @village)
+    conference_program = ConferenceProgram.create!(
+      conference: @conference,
+      program: program,
+      day_schedules: {}
+    )
+
+    # Create a timeslot and signup for first conference only
+    timeslot = Timeslot.create!(
+      conference_program: conference_program,
+      start_time: @conference.start_date.to_datetime + 10.hours,
+      max_volunteers: 5
+    )
+    VolunteerSignup.create!(user: @volunteer, timeslot: timeslot)
+
+    sign_in @volunteer
+    get conferences_url
+
+    assert_response :success
+    # Should show exactly one Volunteered pill
+    assert_select "span.badge.bg-success", text: "Volunteered", count: 1
+  end
+
+  test "index shows Volunteered pill in archived view" do
+    archived_conference = Conference.create!(
+      village: @village,
+      name: "Archived Conference",
+      start_date: Date.yesterday - 10.days,
+      end_date: Date.yesterday - 5.days,
+      archived_at: Time.current
+    )
+
+    # Create program and conference program
+    program = Program.create!(name: "Test Program", village: @village)
+    conference_program = ConferenceProgram.create!(
+      conference: archived_conference,
+      program: program,
+      day_schedules: {}
+    )
+
+    # Create a timeslot
+    timeslot = Timeslot.create!(
+      conference_program: conference_program,
+      start_time: archived_conference.start_date.to_datetime + 10.hours,
+      max_volunteers: 5
+    )
+
+    # Create volunteer signup
+    VolunteerSignup.create!(user: @volunteer, timeslot: timeslot)
+
+    sign_in @volunteer
+    get conferences_url(show_archived: true)
+
+    assert_response :success
+    assert_select "span.badge.bg-success", text: "Volunteered"
+  end
 end

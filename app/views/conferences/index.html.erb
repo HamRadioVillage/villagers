@@ -29,6 +29,9 @@
                 <% else %>
                   <span class="badge bg-info">Upcoming</span>
                 <% end %>
+                <% if @volunteered_conference_ids.include?(conference.id) %>
+                  <span class="badge bg-success">Volunteered</span>
+                <% end %>
               </h5>
               <p class="card-text text-muted">
                 <strong>Lead:</strong>
