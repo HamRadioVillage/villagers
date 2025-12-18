@@ -87,6 +87,30 @@ When creating a new model, add navbar dropdown with:
 - Link to new/create action (permission-gated via Pundit)
 - Follow pattern in `app/views/shared/_navbar.html.erb`
 
+### Email Previews (MANDATORY)
+
+When adding a new email to the application:
+
+1. **Create the mailer method** in `app/mailers/`
+2. **Create HTML and text templates** in `app/views/<mailer_name>/`
+3. **Create a mailer preview** in `test/mailers/previews/<mailer_name>_preview.rb`
+4. **Write mailer tests** in `test/mailers/<mailer_name>_test.rb`
+
+Preview files allow developers to view emails in the browser without triggering the actual workflow:
+- View all previews: `http://localhost:3000/rails/mailers`
+- Previews should use real data when available, with mock fallbacks
+
+Example preview structure:
+```ruby
+class ExampleMailerPreview < ActionMailer::Preview
+  # Preview: http://localhost:3000/rails/mailers/example_mailer/welcome_email
+  def welcome_email
+    user = User.first || User.new(email: "preview@example.com", name: "Preview User")
+    ExampleMailer.welcome_email(user)
+  end
+end
+```
+
 ## Authorization (Pundit)
 
 ### Policies
