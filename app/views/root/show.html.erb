@@ -319,33 +319,80 @@
       </div>
     </div>
 
-    <%# Open Opportunities Card %>
-    <% if @open_conferences&.any? %>
-      <div class="card shadow-sm mb-4">
-        <div class="card-header bg-info text-white">
-          <h5 class="mb-0">Open Opportunities</h5>
-        </div>
-        <div class="card-body">
-          <p class="text-muted small">Conferences with available volunteer shifts:</p>
-          <div class="row">
-            <% @open_conferences.each do |conference| %>
-              <div class="col-md-4 mb-2">
-                <div class="card h-100">
-                  <div class="card-body">
-                    <h6 class="card-title"><%= conference.name %></h6>
-                    <p class="card-text small text-muted mb-2">
-                      <%= conference.start_date.strftime("%b %d") %> - <%= conference.end_date.strftime("%b %d") %>
+    <%# My Conferences and Open Opportunities Row %>
+    <div class="row mb-4">
+      <%# Volunteering For Card %>
+      <div class="col-md-6 mb-3">
+        <div class="card shadow-sm h-100">
+          <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Volunteering For</h5>
+            <%= link_to "View History", volunteer_history_index_path, class: "btn btn-light btn-sm" %>
+          </div>
+          <div class="card-body">
+            <% if @my_volunteering_conferences&.any? %>
+              <div class="list-group list-group-flush">
+                <% @my_volunteering_conferences.each do |item| %>
+                  <% conference = item[:conference] %>
+                  <% shifts_count = item[:shifts_count] %>
+                  <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                    <div>
+                      <%= link_to conference.name, conference_path(conference), class: "text-decoration-none fw-bold" %>
                       <br>
-                      <span class="text-warning"><%= conference.unfilled_timeslots %> shifts available</span>
-                    </p>
-                    <%= link_to "View Schedule", conference_schedule_path(conference), class: "btn btn-info btn-sm" %>
+                      <small class="text-muted">
+                        <%= conference.start_date.strftime("%b %d") %> - <%= conference.end_date.strftime("%b %d, %Y") %>
+                      </small>
+                    </div>
+                    <div class="text-end">
+                      <span class="badge bg-success"><%= shifts_count %> <%= "shift".pluralize(shifts_count) %></span>
+                      <br>
+                      <%= link_to "My Shifts", conference_volunteer_signups_path(conference), class: "btn btn-outline-primary btn-sm mt-1" %>
+                    </div>
                   </div>
-                </div>
+                <% end %>
               </div>
+            <% else %>
+              <p class="text-muted mb-2">You haven't signed up for any conferences yet.</p>
+              <p class="mb-0 small">Browse the open opportunities to find volunteer shifts!</p>
             <% end %>
           </div>
         </div>
       </div>
-    <% end %>
+
+      <%# Open Opportunities Card %>
+      <div class="col-md-6 mb-3">
+        <div class="card shadow-sm h-100">
+          <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Open Opportunities</h5>
+            <%= link_to "All Conferences", conferences_path, class: "btn btn-light btn-sm" %>
+          </div>
+          <div class="card-body">
+            <% if @open_conferences&.any? %>
+              <p class="text-muted small mb-2">Conferences with available volunteer shifts:</p>
+              <div class="list-group list-group-flush">
+                <% @open_conferences.each do |conference| %>
+                  <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                    <div>
+                      <%= link_to conference.name, conference_path(conference), class: "text-decoration-none fw-bold" %>
+                      <br>
+                      <small class="text-muted">
+                        <%= conference.start_date.strftime("%b %d") %> - <%= conference.end_date.strftime("%b %d, %Y") %>
+                      </small>
+                    </div>
+                    <div class="text-end">
+                      <span class="badge bg-warning text-dark"><%= conference.unfilled_timeslots %> available</span>
+                      <br>
+                      <%= link_to "View Schedule", conference_schedule_path(conference), class: "btn btn-outline-info btn-sm mt-1" %>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            <% else %>
+              <p class="text-muted mb-2">No open opportunities right now.</p>
+              <p class="mb-0 small">Check back later or browse all conferences.</p>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
   <% end %>
 </div>

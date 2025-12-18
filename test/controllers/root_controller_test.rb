@@ -194,4 +194,172 @@ class RootControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".alert-info", text: /Sign in/
   end
+
+  # Volunteering For Card Tests
+  test "volunteer sees Volunteering For card" do
+    user = User.create!(
+      email: "volunteer@example.com",
+      password: "password123",
+      password_confirmation: "password123"
+    )
+
+    sign_in user
+    get root_url
+
+    assert_response :success
+    assert_select ".card-header", text: /Volunteering For/
+  end
+
+  test "Volunteering For card shows conferences user has signed up for" do
+    user = User.create!(
+      email: "volunteer@example.com",
+      password: "password123",
+      password_confirmation: "password123"
+    )
+    conference = Conference.create!(
+      name: "Test Conference",
+      village: @village,
+      start_date: Date.tomorrow,
+      end_date: Date.tomorrow + 3.days,
+      conference_hours_start: "09:00",
+      conference_hours_end: "17:00"
+    )
+    program = Program.create!(name: "Test Program", village: @village)
+    conference_program = ConferenceProgram.create!(
+      conference: conference,
+      program: program
+    )
+    timeslot = Timeslot.create!(
+      conference_program: conference_program,
+      start_time: Date.tomorrow.to_datetime + 9.hours,
+      max_volunteers: 5
+    )
+    VolunteerSignup.create!(user: user, timeslot: timeslot)
+
+    sign_in user
+    get root_url
+
+    assert_response :success
+    assert_select ".card-header", text: /Volunteering For/
+    assert_select ".list-group-item", text: /Test Conference/
+  end
+
+  test "Volunteering For card shows shift count for each conference" do
+    user = User.create!(
+      email: "volunteer@example.com",
+      password: "password123",
+      password_confirmation: "password123"
+    )
+    conference = Conference.create!(
+      name: "Test Conference",
+      village: @village,
+      start_date: Date.tomorrow,
+      end_date: Date.tomorrow + 3.days,
+      conference_hours_start: "09:00",
+      conference_hours_end: "17:00"
+    )
+    program = Program.create!(name: "Test Program", village: @village)
+    conference_program = ConferenceProgram.create!(
+      conference: conference,
+      program: program
+    )
+    # Create 3 signups
+    3.times do |i|
+      timeslot = Timeslot.create!(
+        conference_program: conference_program,
+        start_time: Date.tomorrow.to_datetime + (9 + i).hours,
+        max_volunteers: 5
+      )
+      VolunteerSignup.create!(user: user, timeslot: timeslot)
+    end
+
+    sign_in user
+    get root_url
+
+    assert_response :success
+    assert_select ".badge.bg-success", text: /3 shifts/
+  end
+
+  test "Volunteering For card shows empty state when no signups" do
+    user = User.create!(
+      email: "volunteer@example.com",
+      password: "password123",
+      password_confirmation: "password123"
+    )
+
+    sign_in user
+    get root_url
+
+    assert_response :success
+    assert_select ".card-header", text: /Volunteering For/
+    assert_select ".card-body", text: /haven't signed up for any conferences/
+  end
+
+  test "Volunteering For card only shows future conferences" do
+    user = User.create!(
+      email: "volunteer@example.com",
+      password: "password123",
+      password_confirmation: "password123"
+    )
+    # Past conference
+    past_conference = Conference.create!(
+      name: "Past Conference",
+      village: @village,
+      start_date: 10.days.ago.to_date,
+      end_date: 5.days.ago.to_date,
+      conference_hours_start: "09:00",
+      conference_hours_end: "17:00"
+    )
+    # Future conference
+    future_conference = Conference.create!(
+      name: "Future Conference",
+      village: @village,
+      start_date: Date.tomorrow,
+      end_date: Date.tomorrow + 3.days,
+      conference_hours_start: "09:00",
+      conference_hours_end: "17:00"
+    )
+    program = Program.create!(name: "Test Program", village: @village)
+
+    # Sign up for past conference
+    past_cp = ConferenceProgram.create!(conference: past_conference, program: program)
+    past_timeslot = Timeslot.create!(
+      conference_program: past_cp,
+      start_time: 7.days.ago.to_datetime + 9.hours,
+      max_volunteers: 5
+    )
+    VolunteerSignup.create!(user: user, timeslot: past_timeslot)
+
+    # Sign up for future conference
+    future_cp = ConferenceProgram.create!(conference: future_conference, program: program)
+    future_timeslot = Timeslot.create!(
+      conference_program: future_cp,
+      start_time: Date.tomorrow.to_datetime + 9.hours,
+      max_volunteers: 5
+    )
+    VolunteerSignup.create!(user: user, timeslot: future_timeslot)
+
+    sign_in user
+    get root_url
+
+    assert_response :success
+    assert_select ".card-header", text: /Volunteering For/
+    assert_select ".list-group-item", text: /Future Conference/
+    assert_select ".list-group-item", text: /Past Conference/, count: 0
+  end
+
+  # Open Opportunities Card Tests
+  test "volunteer sees Open Opportunities card" do
+    user = User.create!(
+      email: "volunteer@example.com",
+      password: "password123",
+      password_confirmation: "password123"
+    )
+
+    sign_in user
+    get root_url
+
+    assert_response :success
+    assert_select ".card-header", text: /Open Opportunities/
+  end
 end

@@ -69,13 +69,26 @@ class RootController < ApplicationController
     # My qualifications
     @my_qualifications = current_user.qualifications.order(:name)
 
-    # Open opportunities - conferences with available shifts
+    # Get conferences the user has signed up for
     signed_up_conference_ids = current_user.volunteer_signups
                                            .joins(timeslot: :conference_program)
                                            .select("conference_programs.conference_id")
                                            .distinct
                                            .pluck("conference_programs.conference_id")
 
+    # My conferences - conferences I'm volunteering for (active/upcoming first)
+    @my_volunteering_conferences = Conference.where(id: signed_up_conference_ids)
+                                             .where("end_date >= ?", Date.current)
+                                             .order(start_date: :asc)
+                                             .limit(5)
+                                             .map do |conference|
+      {
+        conference: conference,
+        shifts_count: current_user.shifts_for_conference(conference)
+      }
+    end
+
+    # Open opportunities - conferences with available shifts (excluding ones we've signed up for)
     @open_conferences = Conference.active
                                   .where("end_date >= ?", Date.current)
                                   .where.not(id: signed_up_conference_ids)
