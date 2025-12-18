@@ -130,6 +130,29 @@
 
           <hr class="my-4">
 
+          <h5 class="mb-3">Notification Preferences</h5>
+          <div class="card border-info mb-4">
+            <div class="card-body">
+              <%= form_with url: notification_preferences_path, method: :patch, local: true do |f| %>
+                <div class="form-check mb-2">
+                  <%= hidden_field_tag "user[notify_in_app]", "0" %>
+                  <%= check_box_tag "user[notify_in_app]", "1", resource.notify_in_app?, class: "form-check-input", id: "notify_in_app" %>
+                  <%= label_tag :notify_in_app, "In-app notifications", class: "form-check-label" %>
+                  <div class="form-text">Receive notifications in your inbox within the app</div>
+                </div>
+                <div class="form-check mb-3">
+                  <%= hidden_field_tag "user[notify_by_email]", "0" %>
+                  <%= check_box_tag "user[notify_by_email]", "1", resource.notify_by_email?, class: "form-check-input", id: "notify_by_email" %>
+                  <%= label_tag :notify_by_email, "Email notifications", class: "form-check-label" %>
+                  <div class="form-text">Receive notifications via email<%= " (email is currently disabled)" unless Village.email_enabled? %></div>
+                </div>
+                <%= f.submit "Save Notification Preferences", class: "btn btn-outline-primary btn-sm" %>
+              <% end %>
+            </div>
+          </div>
+
+          <hr class="my-4">
+
           <h5 class="mb-3 text-danger">Danger Zone</h5>
           <div class="card border-danger">
             <div class="card-body">

@@ -18,7 +18,7 @@ class Conference < ApplicationRecord
   # Archive scopes
   scope :active, -> { where(archived_at: nil) }
   scope :archived, -> { where.not(archived_at: nil) }
-  scope :past_unarchived, -> { where("end_date < ?", Date.today).where(archived_at: nil) }
+  scope :past_unarchived, -> { where("end_date < ?", Date.current).where(archived_at: nil) }
 
   # Archive methods
   def archived?
@@ -26,7 +26,7 @@ class Conference < ApplicationRecord
   end
 
   def archivable?
-    end_date < Date.today
+    end_date < Date.current
   end
 
   def archive!

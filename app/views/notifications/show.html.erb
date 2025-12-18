@@ -1,0 +1,35 @@
+<div class="container mt-4">
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex align-items-center">
+        <%= link_to notifications_path, class: "btn btn-secondary btn-sm me-3" do %>
+          <span aria-hidden="true">&larr;</span> Back to Inbox
+        <% end %>
+        <h1 class="mb-0"><%= @notification.title %></h1>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <div>
+            <span class="badge bg-secondary"><%= @notification.notification_type.humanize %></span>
+            <small class="text-muted ms-2">
+              <%= @notification.created_at.strftime("%B %d, %Y at %l:%M %p") %>
+            </small>
+          </div>
+          <%= link_to "Delete", notification_path(@notification),
+              data: { turbo_method: :delete, turbo_confirm: "Delete this notification?" },
+              class: "btn btn-sm btn-outline-danger" %>
+        </div>
+        <div class="card-body">
+          <div class="notification-body">
+            <%= simple_format(@notification.body) %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

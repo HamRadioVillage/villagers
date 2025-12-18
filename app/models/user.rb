@@ -29,6 +29,8 @@ class User < ApplicationRecord
   # Volunteer signup associations
   has_many :volunteer_signups, dependent: :destroy
   has_many :timeslots, through: :volunteer_signups
+  # Notification associations
+  has_many :notifications, dependent: :destroy
 
   # Role checking methods
   def village_admin?
@@ -162,5 +164,22 @@ class User < ApplicationRecord
       .group("users.id")
       .order("shifts_count DESC")
       .limit(limit)
+  end
+
+  # Notification methods
+  def unread_notifications_count
+    notifications.unread.count
+  end
+
+  def has_unread_notifications?
+    unread_notifications_count > 0
+  end
+
+  def should_notify_by_email?
+    notify_by_email? && Village.email_enabled?
+  end
+
+  def should_notify_in_app?
+    notify_in_app?
   end
 end

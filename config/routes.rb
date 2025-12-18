@@ -83,6 +83,17 @@ Rails.application.routes.draw do
   # Volunteer history
   resources :volunteer_history, only: [ :index, :show ]
 
+  # Notifications / Inbox
+  resources :notifications, only: [ :index, :show, :destroy ] do
+    collection do
+      post :mark_all_read
+      delete :bulk_destroy
+    end
+  end
+
+  # Notification preferences (doesn't require password like Devise profile updates)
+  resource :notification_preferences, only: [ :update ]
+
   # Defines the root path route ("/")
   root "root#show"
 end

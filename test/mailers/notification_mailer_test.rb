@@ -63,4 +63,65 @@ class NotificationMailerTest < ActionMailer::TestCase
       NotificationMailer.test_email(@user).deliver_now
     end
   end
+
+  test "notification_email sends to correct recipient" do
+    email = NotificationMailer.notification_email(
+      user: @user,
+      title: "Test Title",
+      body: "Test body",
+      notification_type: Notification::SYSTEM
+    )
+
+    assert_equal [ @user.email ], email.to
+  end
+
+  test "notification_email has correct subject with village name" do
+    email = NotificationMailer.notification_email(
+      user: @user,
+      title: "Test Title",
+      body: "Test body",
+      notification_type: Notification::SYSTEM
+    )
+
+    assert_equal "[#{@village.name}] Test Title", email.subject
+  end
+
+  test "notification_email body contains title and body" do
+    email = NotificationMailer.notification_email(
+      user: @user,
+      title: "Test Title",
+      body: "Test notification body content",
+      notification_type: Notification::SYSTEM
+    )
+
+    assert_match "Test Title", email.html_part.body.to_s
+    assert_match "Test notification body content", email.html_part.body.to_s
+    assert_match "Test Title", email.text_part.body.to_s
+    assert_match "Test notification body content", email.text_part.body.to_s
+  end
+
+  test "notification_email body contains user greeting" do
+    email = NotificationMailer.notification_email(
+      user: @user,
+      title: "Test Title",
+      body: "Test body",
+      notification_type: Notification::SYSTEM
+    )
+
+    assert_match @user.name, email.html_part.body.to_s
+    assert_match @user.name, email.text_part.body.to_s
+  end
+
+  test "notification_email uses email when user has no name" do
+    @user.update!(name: nil)
+    email = NotificationMailer.notification_email(
+      user: @user,
+      title: "Test Title",
+      body: "Test body",
+      notification_type: Notification::SYSTEM
+    )
+
+    assert_match @user.email, email.html_part.body.to_s
+    assert_match @user.email, email.text_part.body.to_s
+  end
 end

@@ -55,7 +55,7 @@ class ProgramsController < ApplicationController
 
     conferences_data = @program.conference_programs
       .joins(:conference)
-      .where("conferences.end_date >= ?", Date.today)
+      .where("conferences.end_date >= ?", Date.current)
       .includes(:conference, :timeslots)
       .map do |cp|
         timeslots_count = cp.timeslots.count
