@@ -10,6 +10,8 @@ class VolunteerSignupsController < ApplicationController
                               .where(timeslots: { conference_program_id: @conference.conference_programs.pluck(:id) })
                               .includes(timeslot: [ :conference_program, :program ])
                               .order("timeslots.start_time")
+
+    @shift_groups = group_consecutive_signups(@my_signups)
   end
 
   def create
@@ -121,6 +123,17 @@ class VolunteerSignupsController < ApplicationController
     redirect_to conference_volunteer_signups_path(@conference), notice: "Signup cancelled successfully."
   end
 
+  def bulk_destroy
+    signup_ids = params[:signup_ids] || []
+    # Only delete signups that belong to the current user
+    signups = current_user.volunteer_signups.where(id: signup_ids)
+    count = signups.count
+    signups.destroy_all
+
+    redirect_to conference_volunteer_signups_path(@conference),
+                notice: "Cancelled #{count} shift#{'s' if count != 1}."
+  end
+
   private
 
   def set_conference
@@ -133,5 +146,47 @@ class VolunteerSignupsController < ApplicationController
 
   def set_volunteer_signup
     @volunteer_signup = current_user.volunteer_signups.find(params[:id])
+  end
+
+  def group_consecutive_signups(signups)
+    return [] if signups.empty?
+
+    groups = []
+    current_group = nil
+
+    signups.each do |signup|
+      timeslot = signup.timeslot
+      program_id = timeslot.conference_program.program_id
+
+      if current_group.nil?
+        # Start a new group
+        current_group = new_group(signup)
+      elsif current_group[:program_id] == program_id &&
+            current_group[:end_time] == timeslot.start_time
+        # Continue the current group (consecutive and same program)
+        current_group[:end_time] = timeslot.end_time
+        current_group[:signups] << signup
+      else
+        # Save current group and start a new one
+        groups << current_group
+        current_group = new_group(signup)
+      end
+    end
+
+    # Don't forget the last group
+    groups << current_group if current_group
+
+    groups
+  end
+
+  def new_group(signup)
+    timeslot = signup.timeslot
+    {
+      program_id: timeslot.conference_program.program_id,
+      program_name: timeslot.program.name,
+      start_time: timeslot.start_time,
+      end_time: timeslot.end_time,
+      signups: [ signup ]
+    }
   end
 end
