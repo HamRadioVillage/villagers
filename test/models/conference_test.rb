@@ -319,4 +319,41 @@ class ConferenceTest < ActiveSupport::TestCase
 
     assert_equal "No lead assigned", conference.lead_display_name
   end
+
+  # Reminder hours tests
+  test "effective_reminder_hours returns conference value when set" do
+    @village.update!(reminder_hours_before: 24)
+    conference = Conference.create!(
+      village: @village,
+      name: "Test Conference",
+      start_date: Date.tomorrow,
+      end_date: Date.tomorrow + 3.days,
+      reminder_hours_before: 12
+    )
+
+    assert_equal 12, conference.effective_reminder_hours
+  end
+
+  test "effective_reminder_hours falls back to village value when conference not set" do
+    @village.update!(reminder_hours_before: 48)
+    conference = Conference.create!(
+      village: @village,
+      name: "Test Conference",
+      start_date: Date.tomorrow,
+      end_date: Date.tomorrow + 3.days
+    )
+
+    assert_equal 48, conference.effective_reminder_hours
+  end
+
+  test "effective_reminder_hours returns village default of 24 when nothing set" do
+    conference = Conference.create!(
+      village: @village,
+      name: "Test Conference",
+      start_date: Date.tomorrow,
+      end_date: Date.tomorrow + 3.days
+    )
+
+    assert_equal 24, conference.effective_reminder_hours
+  end
 end

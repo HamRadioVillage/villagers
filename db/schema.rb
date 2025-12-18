@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_18_030709) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_18_055559) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -67,6 +67,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_18_030709) do
     t.datetime "created_at", null: false
     t.date "end_date"
     t.string "name"
+    t.integer "reminder_hours_before"
     t.date "start_date"
     t.string "state"
     t.datetime "updated_at", null: false
@@ -214,12 +215,14 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_18_030709) do
     t.string "mailgun_domain"
     t.string "mailgun_region", default: "us"
     t.string "name", null: false
+    t.integer "reminder_hours_before", default: 24
     t.boolean "setup_complete", default: false, null: false
     t.datetime "updated_at", null: false
   end
 
   create_table "volunteer_signups", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.datetime "reminder_sent_at"
     t.bigint "timeslot_id", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false

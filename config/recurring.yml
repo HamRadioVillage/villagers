@@ -13,3 +13,11 @@ production:
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
+
+  shift_reminders:
+    class: ShiftReminderJob
+    schedule: every 15 minutes
+
+  cleanup_old_notifications:
+    class: CleanupOldNotificationsJob
+    schedule: every day at 3am

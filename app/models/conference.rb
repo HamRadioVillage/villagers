@@ -112,6 +112,12 @@ class Conference < ApplicationRecord
     end
   end
 
+  # Returns the effective reminder hours for this conference
+  # Uses conference-specific value if set, otherwise falls back to village default
+  def effective_reminder_hours
+    reminder_hours_before || village.reminder_hours_before || 24
+  end
+
   private
 
   def end_date_after_start_date

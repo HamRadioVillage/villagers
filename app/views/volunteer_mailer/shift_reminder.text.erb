@@ -1,0 +1,30 @@
+Shift Reminder
+
+Hello <%= @user.name.presence || @user.email %>,
+
+This is a friendly reminder about your upcoming volunteer shift at <%= @conference.name %>!
+
+YOUR SHIFT DETAILS
+==================
+<% @grouped_signups.each do |shift| %>
+Program: <%= shift[:program_name] %>
+Date: <%= shift[:date].strftime("%A, %B %d, %Y") %>
+Time: <%= shift[:start_time].strftime("%l:%M %p").strip %> - <%= shift[:end_time].strftime("%l:%M %p").strip %>
+<% end %>
+
+Total commitment: <%= @duration_display %>
+<% if @conference.display_location != "Not specified" %>
+
+Location: <%= @conference.display_location %>
+<% end %>
+
+NEED TO MAKE CHANGES?
+=====================
+
+You can view or manage your shifts anytime by visiting your My Shifts page:
+<%= conference_volunteer_signups_url(@conference) %>
+
+If you need to cancel your shift, please do so as soon as possible so another volunteer can take your place.
+
+Thank you for volunteering!
+The <%= @village_name %> Team

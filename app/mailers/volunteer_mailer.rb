@@ -18,6 +18,29 @@ class VolunteerMailer < ApplicationMailer
     )
   end
 
+  def shift_reminder(user:, signups:, conference:)
+    @user = user
+    @signups = signups
+    @conference = conference
+    @village_name = Village.first&.name || "Villagers"
+
+    # Group signups by program for easier display
+    @grouped_signups = group_signups_by_program(signups)
+
+    # Calculate total duration
+    @total_minutes = signups.size * 15
+    @duration_display = format_duration(@total_minutes)
+
+    # Find the earliest shift time for the subject line
+    earliest_shift = signups.min_by { |s| s.timeslot.start_time }
+    @earliest_time = earliest_shift.timeslot.start_time
+
+    mail(
+      to: @user.email,
+      subject: "[#{@village_name}] Shift Reminder - #{@conference.name}"
+    )
+  end
+
   private
 
   def group_signups_by_program(signups)

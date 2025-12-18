@@ -35,6 +35,6 @@ class VillagesController < ApplicationController
   end
 
   def village_params
-    params.require(:village).permit(:name)
+    params.require(:village).permit(:name, :reminder_hours_before)
   end
 end
