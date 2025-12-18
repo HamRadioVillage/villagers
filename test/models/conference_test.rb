@@ -200,8 +200,8 @@ class ConferenceTest < ActiveSupport::TestCase
     past_conference = Conference.create!(
       village: @village,
       name: "Past Conference",
-      start_date: Date.yesterday - 5.days,
-      end_date: Date.yesterday
+      start_date: 6.days.ago.to_date,
+      end_date: 1.day.ago.to_date
     )
     assert past_conference.archivable?
   end

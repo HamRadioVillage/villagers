@@ -85,6 +85,14 @@
             </li>
           <% end %>
           <li class="nav-item">
+            <%= link_to notifications_path, class: "nav-link" do %>
+              Inbox
+              <% if current_user.has_unread_notifications? %>
+                <span class="badge bg-danger"><%= current_user.unread_notifications_count %></span>
+              <% end %>
+            <% end %>
+          </li>
+          <li class="nav-item">
             <%= link_to "Profile", edit_user_registration_path, class: "nav-link" %>
           </li>
           <li class="nav-item">

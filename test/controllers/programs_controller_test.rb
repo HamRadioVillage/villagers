@@ -190,8 +190,8 @@ class ProgramsControllerTest < ActionDispatch::IntegrationTest
     past_conference = Conference.create!(
       name: "Past Conference",
       village: @village,
-      start_date: Date.yesterday - 5.days,
-      end_date: Date.yesterday,
+      start_date: 6.days.ago.to_date,
+      end_date: 1.day.ago.to_date,
       conference_hours_start: Time.zone.parse("2000-01-01 09:00"),
       conference_hours_end: Time.zone.parse("2000-01-01 12:00")
     )
