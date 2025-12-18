@@ -49,6 +49,45 @@
               <%= form.password_field "user[password_confirmation]", class: "form-control", required: true %>
             </div>
 
+            <hr class="my-4">
+
+            <h5 class="mb-3">Email Configuration</h5>
+
+            <div class="mb-3">
+              <div class="form-check form-switch">
+                <%= form.check_box "village[email_enabled]", { class: "form-check-input", role: "switch", id: "emailEnabled", checked: @village.email_enabled?, data: { action: "change->email-config#toggle" } } %>
+                <%= form.label "village[email_enabled]", "Enable email notifications", class: "form-check-label", for: "emailEnabled" %>
+              </div>
+              <div class="form-text">When enabled, users must verify their email address to sign up, and the system can send notification emails.</div>
+            </div>
+
+            <div id="mailgunSettings" class="<%= 'd-none' unless @village.email_enabled? %>">
+              <div class="alert alert-info">
+                <small>
+                  <strong>Mailgun Setup:</strong> Create a free account at <a href="https://www.mailgun.com" target="_blank">mailgun.com</a> to get your API key and domain.
+                </small>
+              </div>
+
+              <div class="mb-3">
+                <%= form.label "village[mailgun_api_key]", "Mailgun API Key", class: "form-label" %>
+                <%= form.text_field "village[mailgun_api_key]", value: @village.mailgun_api_key, class: "form-control", placeholder: "key-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" %>
+              </div>
+
+              <div class="mb-3">
+                <%= form.label "village[mailgun_domain]", "Mailgun Domain", class: "form-label" %>
+                <%= form.text_field "village[mailgun_domain]", value: @village.mailgun_domain, class: "form-control", placeholder: "mg.yourdomain.com" %>
+              </div>
+
+              <div class="mb-3">
+                <%= form.label "village[mailgun_region]", "Mailgun Region", class: "form-label" %>
+                <%= form.select "village[mailgun_region]", [["US", "us"], ["EU", "eu"]], { selected: @village.mailgun_region || "us" }, { class: "form-select" } %>
+              </div>
+            </div>
+
+            <div id="emailDisabledWarning" class="alert alert-warning <%= 'd-none' if @village.email_enabled? %>">
+              <strong>Email disabled:</strong> Users will not need to verify their email address, and no notification emails will be sent. Password reset will not work without email.
+            </div>
+
             <div class="d-grid">
               <%= form.submit "Complete Setup", class: "btn btn-primary btn-lg" %>
             </div>

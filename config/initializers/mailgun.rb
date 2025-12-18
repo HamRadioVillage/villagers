@@ -18,9 +18,11 @@ class MailgunDeliveryMethod
   end
 
   def deliver!(mail)
-    api_key = settings[:api_key] || ENV.fetch("MAILGUN_API_KEY", nil)
-    domain = settings[:domain] || ENV.fetch("MAILGUN_DOMAIN", nil)
-    region = settings[:region] || ENV.fetch("MAILGUN_REGION", "us")
+    # Try Village settings first, then fall back to environment variables
+    village_settings = village_mailgun_settings
+    api_key = village_settings[:api_key] || settings[:api_key] || ENV.fetch("MAILGUN_API_KEY", nil)
+    domain = village_settings[:domain] || settings[:domain] || ENV.fetch("MAILGUN_DOMAIN", nil)
+    region = village_settings[:region] || settings[:region] || ENV.fetch("MAILGUN_REGION", "us")
 
     raise ArgumentError, "Mailgun API key is required" if api_key.blank?
     raise ArgumentError, "Mailgun domain is required" if domain.blank?
@@ -56,6 +58,17 @@ class MailgunDeliveryMethod
 
     # Send the message
     mg_client.send_message(domain, message_builder)
+  end
+
+  private
+
+  def village_mailgun_settings
+    return {} unless defined?(Village) && Village.table_exists?
+
+    Village.mailgun_settings
+  rescue ActiveRecord::StatementInvalid
+    # Handle case where database isn't ready yet
+    {}
   end
 end
 

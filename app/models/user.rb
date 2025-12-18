@@ -8,6 +8,13 @@ class User < ApplicationRecord
   # Devise handles email validation, but we keep format validation
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
 
+  # Skip email confirmation when email is disabled
+  before_create :auto_confirm_if_email_disabled
+
+  private def auto_confirm_if_email_disabled
+    skip_confirmation! unless Village.email_enabled?
+  end
+
   # Role associations
   has_many :user_roles, dependent: :destroy
   has_many :roles, through: :user_roles

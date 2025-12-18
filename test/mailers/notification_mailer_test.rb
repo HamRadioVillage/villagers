@@ -2,6 +2,16 @@ require "test_helper"
 
 class NotificationMailerTest < ActionMailer::TestCase
   setup do
+    # Create a village with email enabled for mailer tests
+    Village.destroy_all
+    @village = Village.create!(
+      name: "Test Village",
+      setup_complete: true,
+      email_enabled: true,
+      mailgun_api_key: "test-key",
+      mailgun_domain: "test.mailgun.org"
+    )
+
     @user = User.create!(
       email: "user@example.com",
       password: "password123",
