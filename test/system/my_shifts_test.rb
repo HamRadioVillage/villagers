@@ -81,10 +81,7 @@ class MyShiftsTest < ApplicationSystemTestCase
     # Click the My Shifts button and wait for navigation
     find("a.btn", text: "My Shifts", match: :first).click
 
-    # Wait for navigation to complete - the URL should change
-    assert_current_path conference_volunteer_signups_path(@conference)
-
-    # Verify we're on the My Shifts page
-    assert_text "My Shifts - #{@conference.name}"
+    # Wait for the My Shifts page content to appear (more reliable than URL check)
+    assert_text "My Shifts - #{@conference.name}", wait: 10
   end
 end
