@@ -37,7 +37,12 @@ Rails.application.routes.draw do
     resources :conference_roles, only: [ :create, :destroy ]
     get "schedule", to: "schedule#show", as: :schedule
     get "leaderboard", to: "leaderboard#conference", as: :leaderboard
-    resources :volunteer_signups, only: [ :index, :create, :destroy ]
+    resources :volunteer_signups, only: [ :index, :create, :destroy ] do
+      collection do
+        post :bulk_create
+        get :available_timeslots
+      end
+    end
     resources :timeslots, only: [ :update ] do
       member do
         post :add_volunteer

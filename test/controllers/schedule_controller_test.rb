@@ -169,7 +169,8 @@ class ScheduleControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     # Unqualified users see the qualification requirement, not a sign up button
     assert_match "Test Cert qualification required", response.body
-    assert_no_match(/Sign Up/, response.body.gsub(/Sign Up.*?for/, "")) # Exclude nav text
+    # Check that no schedule cell sign-up buttons exist (modal button is ok)
+    assert_no_match(/data-action="shift-signup#openModal"/, response.body)
   end
 
   test "sign up button shown for qualified user" do

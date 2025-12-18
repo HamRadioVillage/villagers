@@ -1,4 +1,6 @@
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-4" data-controller="shift-signup"
+     data-shift-signup-available-timeslots-url-value="<%= available_timeslots_conference_volunteer_signups_path(@conference) %>"
+     data-shift-signup-bulk-create-url-value="<%= bulk_create_conference_volunteer_signups_path(@conference) %>">
   <div class="row mb-4">
     <div class="col-12">
       <div class="d-flex align-items-center">
@@ -96,10 +98,12 @@
                                     data: { turbo_method: :delete, turbo_confirm: "Cancel this shift?" },
                                     class: "btn btn-sm btn-outline-danger" %>
                               <% elsif !slot_data[:full] && !user_lacks_qualifications %>
-                                <%= form_with url: conference_volunteer_signups_path(@conference), method: :post, local: true, class: "d-inline" do |form| %>
-                                  <%= hidden_field_tag :timeslot_id, slot_data[:timeslot].id %>
-                                  <%= form.submit "Sign Up", class: "btn btn-sm btn-primary" %>
-                                <% end %>
+                                <button type="button"
+                                        class="btn btn-sm btn-primary"
+                                        data-action="shift-signup#openModal"
+                                        data-timeslot-id="<%= slot_data[:timeslot].id %>">
+                                  Sign Up
+                                </button>
                               <% end %>
                             </div>
                           </div>
@@ -175,6 +179,52 @@
       </div>
     </div>
   <% end %>
+
+  <!-- Shift Signup Modal -->
+  <div class="modal fade" id="shiftSignupModal" tabindex="-1" data-shift-signup-target="modal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Sign Up for Shift</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-bold">Program</label>
+            <p class="mb-0" data-shift-signup-target="programName">-</p>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold">Start Time</label>
+            <p class="mb-0" data-shift-signup-target="startTime">-</p>
+          </div>
+
+          <div class="mb-3">
+            <label for="shiftDuration" class="form-label fw-bold">How long would you like to volunteer?</label>
+            <select id="shiftDuration" class="form-select" data-shift-signup-target="endTimeSelect" data-action="change->shift-signup#selectionChanged">
+              <option>Loading options...</option>
+            </select>
+          </div>
+
+          <div class="alert alert-info mb-0">
+            <small>
+              <strong>Total commitment:</strong>
+              <span data-shift-signup-target="durationDisplay">-</span>
+            </small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div class="d-none spinner-border spinner-border-sm text-primary me-2" role="status" data-shift-signup-target="loading">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" data-shift-signup-target="submitBtn" data-action="shift-signup#submit">
+            Sign Up
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <style>

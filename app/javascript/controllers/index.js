@@ -12,3 +12,6 @@ application.register("hello", HelloController)
 
 import LocationFieldsController from "./location_fields_controller"
 application.register("location-fields", LocationFieldsController)
+
+import ShiftSignupController from "./shift_signup_controller"
+application.register("shift-signup", ShiftSignupController)
