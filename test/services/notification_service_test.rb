@@ -42,11 +42,12 @@ class NotificationServiceTest < ActiveSupport::TestCase
     )
   end
 
-  test "notify_shift_signup creates in-app notification when enabled" do
+  test "notify_shift_signups creates in-app notification when enabled" do
     @user.update!(notify_in_app: true, notify_by_email: false)
+    signup = VolunteerSignup.create!(user: @user, timeslot: @timeslot)
 
     assert_difference("Notification.count", 1) do
-      NotificationService.notify_shift_signup(user: @user, timeslot: @timeslot)
+      NotificationService.notify_shift_signups(user: @user, signups: [ signup ])
     end
 
     notification = @user.notifications.last
@@ -56,32 +57,65 @@ class NotificationServiceTest < ActiveSupport::TestCase
     assert_equal Notification::SHIFT_SIGNUP, notification.notification_type
   end
 
-  test "notify_shift_signup sends email when enabled and email configured" do
+  test "notify_shift_signups sends email when enabled and email configured" do
     @village.update!(email_enabled: true, mailgun_api_key: "test-key", mailgun_domain: "test.mailgun.org")
     @user.update!(notify_in_app: false, notify_by_email: true)
+    signup = VolunteerSignup.create!(user: @user, timeslot: @timeslot)
 
     assert_enqueued_with(job: ActionMailer::MailDeliveryJob) do
-      NotificationService.notify_shift_signup(user: @user, timeslot: @timeslot)
+      NotificationService.notify_shift_signups(user: @user, signups: [ signup ])
     end
   end
 
-  test "notify_shift_signup does not send email when email disabled globally" do
+  test "notify_shift_signups does not send email when email disabled globally" do
     @village.update!(email_enabled: false)
     @user.update!(notify_in_app: false, notify_by_email: true)
+    signup = VolunteerSignup.create!(user: @user, timeslot: @timeslot)
 
     assert_no_enqueued_jobs only: ActionMailer::MailDeliveryJob do
-      NotificationService.notify_shift_signup(user: @user, timeslot: @timeslot)
+      NotificationService.notify_shift_signups(user: @user, signups: [ signup ])
     end
   end
 
-  test "notify_shift_signup creates both in-app and email when both enabled" do
+  test "notify_shift_signups creates both in-app and email when both enabled" do
     @village.update!(email_enabled: true, mailgun_api_key: "test-key", mailgun_domain: "test.mailgun.org")
     @user.update!(notify_in_app: true, notify_by_email: true)
+    signup = VolunteerSignup.create!(user: @user, timeslot: @timeslot)
 
     assert_difference("Notification.count", 1) do
       assert_enqueued_with(job: ActionMailer::MailDeliveryJob) do
-        NotificationService.notify_shift_signup(user: @user, timeslot: @timeslot)
+        NotificationService.notify_shift_signups(user: @user, signups: [ signup ])
       end
+    end
+  end
+
+  test "notify_shift_signups with multiple signups creates single notification" do
+    @user.update!(notify_in_app: true, notify_by_email: false)
+
+    timeslot2 = Timeslot.create!(
+      conference_program: @conference_program,
+      start_time: Date.tomorrow.to_datetime + 9.hours + 15.minutes,
+      max_volunteers: 2
+    )
+
+    signup1 = VolunteerSignup.create!(user: @user, timeslot: @timeslot)
+    signup2 = VolunteerSignup.create!(user: @user, timeslot: timeslot2)
+
+    assert_difference("Notification.count", 1) do
+      NotificationService.notify_shift_signups(user: @user, signups: [ signup1, signup2 ])
+    end
+
+    notification = @user.notifications.last
+    assert_equal "Shift Signup Confirmed", notification.title
+    assert_includes notification.body, "2 shifts"
+    assert_includes notification.body, "30 minutes"
+  end
+
+  test "notify_shift_signups with empty signups does nothing" do
+    @user.update!(notify_in_app: true, notify_by_email: true)
+
+    assert_no_difference("Notification.count") do
+      NotificationService.notify_shift_signups(user: @user, signups: [])
     end
   end
 
@@ -142,9 +176,10 @@ class NotificationServiceTest < ActiveSupport::TestCase
 
   test "does not create in-app notification when disabled" do
     @user.update!(notify_in_app: false, notify_by_email: false)
+    signup = VolunteerSignup.create!(user: @user, timeslot: @timeslot)
 
     assert_no_difference("Notification.count") do
-      NotificationService.notify_shift_signup(user: @user, timeslot: @timeslot)
+      NotificationService.notify_shift_signups(user: @user, signups: [ signup ])
     end
   end
 end

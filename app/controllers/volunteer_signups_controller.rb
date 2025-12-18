@@ -18,6 +18,7 @@ class VolunteerSignupsController < ApplicationController
     @volunteer_signup = VolunteerSignup.new(user: current_user, timeslot: @timeslot)
 
     if @volunteer_signup.save
+      NotificationService.notify_shift_signups(user: current_user, signups: [ @volunteer_signup ])
       redirect_to conference_volunteer_signups_path(@timeslot.conference), notice: "Successfully signed up for this shift."
     else
       redirect_to conference_volunteer_signups_path(@timeslot.conference), alert: @volunteer_signup.errors.full_messages.join(", ")
@@ -58,18 +59,22 @@ class VolunteerSignupsController < ApplicationController
     end
 
     # Create signups in a transaction
-    created_count = 0
+    created_signups = []
     ActiveRecord::Base.transaction do
       timeslots_to_signup.each do |timeslot|
         signup = VolunteerSignup.new(user: current_user, timeslot: timeslot)
         if signup.save
-          created_count += 1
+          created_signups << signup
         else
           raise ActiveRecord::Rollback, signup.errors.full_messages.join(", ")
         end
       end
     end
 
+    # Send single consolidated notification for all signups
+    NotificationService.notify_shift_signups(user: current_user, signups: created_signups) if created_signups.any?
+
+    created_count = created_signups.size
     total_minutes = created_count * 15
     hours = total_minutes / 60
     minutes = total_minutes % 60
