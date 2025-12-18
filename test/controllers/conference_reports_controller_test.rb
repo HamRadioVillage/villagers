@@ -1,9 +1,7 @@
-# frozen_string_literal: true
-
 require "test_helper"
 
 class ConferenceReportsControllerTest < ActionDispatch::IntegrationTest
-  def setup
+  setup do
     @village = Village.create!(name: "Test Village", setup_complete: true)
     @conference = Conference.create!(
       name: "Test Conference",
