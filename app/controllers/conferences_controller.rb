@@ -9,6 +9,12 @@ class ConferencesController < ApplicationController
     else
                      Conference.active.includes(conference_roles: :user).order(start_date: :desc)
     end
+
+    # Build set of conference IDs where current user has volunteer signups
+    @volunteered_conference_ids = current_user.volunteer_signups
+                                              .joins(timeslot: :conference_program)
+                                              .pluck("conference_programs.conference_id")
+                                              .to_set
   end
 
   def show
