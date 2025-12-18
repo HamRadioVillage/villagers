@@ -215,4 +215,113 @@ class VolunteerMailerTest < ActionMailer::TestCase
     assert_match "Las Vegas, NV", email.html_part.body.to_s
     assert_match "Las Vegas, NV", email.text_part.body.to_s
   end
+
+  # Admin signup notification tests
+  test "admin_signup_notification sends to correct recipient" do
+    admin = User.create!(
+      email: "admin@example.com",
+      password: "password123",
+      password_confirmation: "password123",
+      name: "Admin User"
+    )
+
+    email = VolunteerMailer.admin_signup_notification(
+      admin: admin,
+      volunteer: @user,
+      signup: @signup,
+      conference: @conference
+    )
+
+    assert_equal [ admin.email ], email.to
+  end
+
+  test "admin_signup_notification has correct subject" do
+    admin = User.create!(
+      email: "admin@example.com",
+      password: "password123",
+      password_confirmation: "password123"
+    )
+
+    email = VolunteerMailer.admin_signup_notification(
+      admin: admin,
+      volunteer: @user,
+      signup: @signup,
+      conference: @conference
+    )
+
+    assert_equal "[#{@village.name}] New Volunteer Signup - #{@conference.name}", email.subject
+  end
+
+  test "admin_signup_notification includes volunteer info" do
+    admin = User.create!(
+      email: "admin@example.com",
+      password: "password123",
+      password_confirmation: "password123"
+    )
+
+    email = VolunteerMailer.admin_signup_notification(
+      admin: admin,
+      volunteer: @user,
+      signup: @signup,
+      conference: @conference
+    )
+
+    assert_match @user.email, email.html_part.body.to_s
+    assert_match @user.email, email.text_part.body.to_s
+  end
+
+  test "admin_signup_notification includes program name" do
+    admin = User.create!(
+      email: "admin@example.com",
+      password: "password123",
+      password_confirmation: "password123"
+    )
+
+    email = VolunteerMailer.admin_signup_notification(
+      admin: admin,
+      volunteer: @user,
+      signup: @signup,
+      conference: @conference
+    )
+
+    assert_match @program.name, email.html_part.body.to_s
+    assert_match @program.name, email.text_part.body.to_s
+  end
+
+  test "admin_signup_notification includes fill status" do
+    admin = User.create!(
+      email: "admin@example.com",
+      password: "password123",
+      password_confirmation: "password123"
+    )
+
+    email = VolunteerMailer.admin_signup_notification(
+      admin: admin,
+      volunteer: @user,
+      signup: @signup,
+      conference: @conference
+    )
+
+    # Should show current fill status (1/5 since we have one signup)
+    assert_match "1/5", email.html_part.body.to_s
+    assert_match "1/5", email.text_part.body.to_s
+  end
+
+  test "admin_signup_notification includes shift time" do
+    admin = User.create!(
+      email: "admin@example.com",
+      password: "password123",
+      password_confirmation: "password123"
+    )
+
+    email = VolunteerMailer.admin_signup_notification(
+      admin: admin,
+      volunteer: @user,
+      signup: @signup,
+      conference: @conference
+    )
+
+    assert_match "9:00 AM", email.html_part.body.to_s
+    assert_match "9:00 AM", email.text_part.body.to_s
+  end
 end

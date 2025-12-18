@@ -1,0 +1,19 @@
+New Volunteer Signup
+
+Hello <%= @admin.name.presence || @admin.email %>,
+
+A volunteer has signed up for a shift at <%= @conference.name %>.
+
+SIGNUP DETAILS
+==============
+Volunteer: <%= @volunteer.name.presence || @volunteer.email %>
+Email: <%= @volunteer.email %>
+Program: <%= @program.name %>
+Date: <%= @timeslot.start_time.strftime("%A, %B %d, %Y") %>
+Time: <%= @timeslot.start_time.strftime("%l:%M %p").strip %> - <%= @timeslot.end_time.strftime("%l:%M %p").strip %>
+Timeslot Fill Status: <%= @fill_status %> volunteers
+
+You can view the full schedule and all signups on the conference dashboard:
+<%= conference_dashboard_url(@conference) %>
+
+The <%= @village_name %> Team
