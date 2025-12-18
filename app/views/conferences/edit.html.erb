@@ -49,10 +49,22 @@
 
             <div class="mb-3">
               <%= label_tag :conference_lead_id, "Conference Lead", class: "form-label" %>
-              <%= select_tag :conference_lead_id, 
+              <%= select_tag :conference_lead_id,
                   options_from_collection_for_select(@users, :id, :email, @current_lead&.id),
                   { include_blank: "Select a conference lead (optional)", class: "form-select" } %>
               <div class="form-text">The conference lead will have management permissions for this conference.</div>
+            </div>
+
+            <hr class="my-4">
+            <h5>Notification Settings</h5>
+
+            <div class="mb-3">
+              <%= form.label :reminder_hours_before, "Shift Reminder (hours before)", class: "form-label" %>
+              <%= form.number_field :reminder_hours_before, class: "form-control", min: 1, max: 168 %>
+              <div class="form-text">
+                Send volunteers a reminder email this many hours before their shift starts.
+                Leave blank to use the village default (<%= @conference.village.reminder_hours_before || 24 %> hours).
+              </div>
             </div>
 
             <div class="d-grid gap-2 d-md-flex justify-content-md-end">

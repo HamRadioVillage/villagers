@@ -26,6 +26,18 @@
               </div>
             </div>
 
+            <hr class="my-4">
+            <h5>Notification Settings</h5>
+
+            <div class="mb-3">
+              <%= form.label :reminder_hours_before, "Shift Reminder (hours before)", class: "form-label" %>
+              <%= form.number_field :reminder_hours_before, class: "form-control", min: 1, max: 168 %>
+              <div class="form-text">
+                Send volunteers a reminder email this many hours before their shift starts. Default is 24 hours.
+                Individual conferences can override this setting.
+              </div>
+            </div>
+
             <div class="d-grid gap-2 d-md-flex justify-content-md-end">
               <%= link_to "Cancel", village_path, class: "btn btn-secondary btn-lg" %>
               <%= form.submit "Update Village", class: "btn btn-primary btn-lg" %>

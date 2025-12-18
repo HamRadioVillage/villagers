@@ -149,4 +149,70 @@ class VolunteerMailerTest < ActionMailer::TestCase
     assert_match @user.email, email.html_part.body.to_s
     assert_match @user.email, email.text_part.body.to_s
   end
+
+  # Shift reminder tests
+  test "shift_reminder sends to correct recipient" do
+    email = VolunteerMailer.shift_reminder(
+      user: @user,
+      signups: [ @signup ],
+      conference: @conference
+    )
+
+    assert_equal [ @user.email ], email.to
+  end
+
+  test "shift_reminder has correct subject" do
+    email = VolunteerMailer.shift_reminder(
+      user: @user,
+      signups: [ @signup ],
+      conference: @conference
+    )
+
+    assert_equal "[#{@village.name}] Shift Reminder - #{@conference.name}", email.subject
+  end
+
+  test "shift_reminder includes program name" do
+    email = VolunteerMailer.shift_reminder(
+      user: @user,
+      signups: [ @signup ],
+      conference: @conference
+    )
+
+    assert_match @program.name, email.html_part.body.to_s
+    assert_match @program.name, email.text_part.body.to_s
+  end
+
+  test "shift_reminder includes shift time" do
+    email = VolunteerMailer.shift_reminder(
+      user: @user,
+      signups: [ @signup ],
+      conference: @conference
+    )
+
+    assert_match "9:00 AM", email.html_part.body.to_s
+    assert_match "9:00 AM", email.text_part.body.to_s
+  end
+
+  test "shift_reminder includes link to My Shifts" do
+    email = VolunteerMailer.shift_reminder(
+      user: @user,
+      signups: [ @signup ],
+      conference: @conference
+    )
+
+    assert_match %r{/conferences/\d+/volunteer_signups}, email.html_part.body.to_s
+    assert_match %r{/conferences/\d+/volunteer_signups}, email.text_part.body.to_s
+  end
+
+  test "shift_reminder includes location when available" do
+    @conference.update!(city: "Las Vegas", state: "NV", country: "US")
+    email = VolunteerMailer.shift_reminder(
+      user: @user,
+      signups: [ @signup ],
+      conference: @conference
+    )
+
+    assert_match "Las Vegas, NV", email.html_part.body.to_s
+    assert_match "Las Vegas, NV", email.text_part.body.to_s
+  end
 end

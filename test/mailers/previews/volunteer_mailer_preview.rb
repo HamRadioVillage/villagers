@@ -1,12 +1,37 @@
 class VolunteerMailerPreview < ActionMailer::Preview
   # Preview: http://localhost:3000/rails/mailers/volunteer_mailer/shift_signup_confirmation
   def shift_signup_confirmation
+    user, conference, signups = build_preview_data
+    VolunteerMailer.shift_signup_confirmation(
+      user: user,
+      signups: signups,
+      conference: conference
+    )
+  end
+
+  # Preview: http://localhost:3000/rails/mailers/volunteer_mailer/shift_reminder
+  def shift_reminder
+    user, conference, signups = build_preview_data
+    VolunteerMailer.shift_reminder(
+      user: user,
+      signups: signups,
+      conference: conference
+    )
+  end
+
+  private
+
+  def build_preview_data
     user = User.first || User.new(email: "preview@example.com", name: "Preview User")
-    conference = Conference.first || Conference.new(name: "Preview Conference")
+    conference = Conference.first || Conference.new(
+      name: "Preview Conference",
+      city: "Las Vegas",
+      state: "NV",
+      country: "US"
+    )
     program = Program.first || Program.new(name: "Preview Program")
     conference_program = ConferenceProgram.new(conference: conference, program: program)
 
-    # Create mock signups for preview
     signups = 3.times.map do |i|
       timeslot = Timeslot.new(
         conference_program: conference_program,
@@ -16,10 +41,6 @@ class VolunteerMailerPreview < ActionMailer::Preview
       VolunteerSignup.new(user: user, timeslot: timeslot)
     end
 
-    VolunteerMailer.shift_signup_confirmation(
-      user: user,
-      signups: signups,
-      conference: conference
-    )
+    [ user, conference, signups ]
   end
 end
