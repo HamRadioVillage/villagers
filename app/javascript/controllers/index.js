@@ -7,6 +7,9 @@ import { application } from "./application"
 import BulkCapacityUpdateController from "./bulk_capacity_update_controller"
 application.register("bulk-capacity-update", BulkCapacityUpdateController)
 
+import EmailConfigController from "./email_config_controller"
+application.register("email-config", EmailConfigController)
+
 import HelloController from "./hello_controller"
 application.register("hello", HelloController)
 

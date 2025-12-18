@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_15_035321) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_18_024149) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -194,6 +194,10 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_15_035321) do
 
   create_table "villages", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.boolean "email_enabled", default: false, null: false
+    t.string "mailgun_api_key"
+    t.string "mailgun_domain"
+    t.string "mailgun_region", default: "us"
     t.string "name", null: false
     t.boolean "setup_complete", default: false, null: false
     t.datetime "updated_at", null: false

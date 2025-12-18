@@ -35,7 +35,7 @@ class SetupController < ApplicationController
   end
 
   def village_params
-    params.require(:village).permit(:name)
+    params.require(:village).permit(:name, :email_enabled, :mailgun_api_key, :mailgun_domain, :mailgun_region)
   end
 
   def user_params
