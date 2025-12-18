@@ -293,4 +293,127 @@ class VolunteerSignupsControllerTest < ActionDispatch::IntegrationTest
     assert json["available_end_times"].is_a?(Array)
     assert_equal 4, json["available_end_times"].length
   end
+
+  # Consolidated shifts tests
+  test "index groups consecutive signups into shift groups" do
+    # Create 4 consecutive timeslots (use 13:00 to avoid conflicts)
+    timeslots = []
+    4.times do |i|
+      timeslots << Timeslot.create!(
+        conference_program: @conference_program,
+        start_time: Date.tomorrow.to_datetime + 13.hours + (i * 15).minutes,
+        max_volunteers: 2
+      )
+    end
+
+    # Sign up for all 4
+    timeslots.each { |ts| VolunteerSignup.create!(user: @volunteer, timeslot: ts) }
+
+    sign_in @volunteer
+    get conference_volunteer_signups_url(@conference)
+
+    assert_response :success
+    # Should show consolidated time range (1:00 PM - 2:00 PM)
+    assert_match(/1:00 PM.*2:00 PM/m, response.body)
+    # Should show duration
+    assert_match(/1 hr/, response.body)
+    # Should show "4 timeslots in 1 shift"
+    assert_match(/4 timeslots in 1 shift/, response.body)
+  end
+
+  test "index keeps non-consecutive signups as separate groups" do
+    # Create timeslots with a gap (use 14:00 and 16:00 to avoid conflicts)
+    ts1 = Timeslot.create!(
+      conference_program: @conference_program,
+      start_time: Date.tomorrow.to_datetime + 14.hours,
+      max_volunteers: 2
+    )
+    ts2 = Timeslot.create!(
+      conference_program: @conference_program,
+      start_time: Date.tomorrow.to_datetime + 16.hours, # 2 hour gap
+      max_volunteers: 2
+    )
+
+    VolunteerSignup.create!(user: @volunteer, timeslot: ts1)
+    VolunteerSignup.create!(user: @volunteer, timeslot: ts2)
+
+    sign_in @volunteer
+    get conference_volunteer_signups_url(@conference)
+
+    assert_response :success
+    # Should show "2 timeslots in 2 shifts" (non-consecutive = separate)
+    assert_match(/2 timeslots in 2 shifts/, response.body)
+  end
+
+  test "index keeps different programs as separate groups" do
+    program2 = Program.create!(name: "Second Program", village: @village)
+    cp2 = ConferenceProgram.create!(conference: @conference, program: program2)
+
+    ts1 = Timeslot.create!(
+      conference_program: @conference_program,
+      start_time: Date.tomorrow.to_datetime + 15.hours,
+      max_volunteers: 2
+    )
+    ts2 = Timeslot.create!(
+      conference_program: cp2,
+      start_time: Date.tomorrow.to_datetime + 15.hours + 15.minutes,
+      max_volunteers: 2
+    )
+
+    VolunteerSignup.create!(user: @volunteer, timeslot: ts1)
+    VolunteerSignup.create!(user: @volunteer, timeslot: ts2)
+
+    sign_in @volunteer
+    get conference_volunteer_signups_url(@conference)
+
+    assert_response :success
+    # Should show "2 timeslots in 2 shifts" (different programs = separate)
+    assert_match(/2 timeslots in 2 shifts/, response.body)
+    # Both program names should appear
+    assert_match(/Test Program/, response.body)
+    assert_match(/Second Program/, response.body)
+  end
+
+  test "bulk_destroy cancels all signups in a group" do
+    timeslots = []
+    4.times do |i|
+      timeslots << Timeslot.create!(
+        conference_program: @conference_program,
+        start_time: Date.tomorrow.to_datetime + 12.hours + (i * 15).minutes,
+        max_volunteers: 2
+      )
+    end
+
+    signups = timeslots.map { |ts| VolunteerSignup.create!(user: @volunteer, timeslot: ts) }
+
+    sign_in @volunteer
+    assert_difference("VolunteerSignup.count", -4) do
+      delete bulk_destroy_conference_volunteer_signups_url(@conference),
+             params: { signup_ids: signups.map(&:id) }
+    end
+
+    assert_redirected_to conference_volunteer_signups_path(@conference)
+    assert_match(/4 shifts/, flash[:notice])
+  end
+
+  test "bulk_destroy only cancels user's own signups" do
+    ts = Timeslot.create!(
+      conference_program: @conference_program,
+      start_time: Date.tomorrow.to_datetime + 17.hours,
+      max_volunteers: 2
+    )
+
+    own_signup = VolunteerSignup.create!(user: @volunteer, timeslot: ts)
+    other_signup = VolunteerSignup.create!(user: @volunteer2, timeslot: @timeslot)
+
+    sign_in @volunteer
+    # Try to delete both - should only delete own
+    assert_difference("VolunteerSignup.count", -1) do
+      delete bulk_destroy_conference_volunteer_signups_url(@conference),
+             params: { signup_ids: [ own_signup.id, other_signup.id ] }
+    end
+
+    # Other user's signup should still exist
+    assert VolunteerSignup.exists?(other_signup.id)
+  end
 end

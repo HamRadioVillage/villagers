@@ -40,6 +40,7 @@ Rails.application.routes.draw do
     resources :volunteer_signups, only: [ :index, :create, :destroy ] do
       collection do
         post :bulk_create
+        delete :bulk_destroy
         get :available_timeslots
       end
     end

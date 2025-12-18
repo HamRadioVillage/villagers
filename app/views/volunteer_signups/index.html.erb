@@ -13,12 +13,12 @@
     </div>
   </div>
 
-  <% if @my_signups.any? %>
+  <% if @shift_groups.any? %>
     <div class="row">
       <div class="col-12">
         <div class="card">
           <div class="card-header bg-success text-white">
-            <h5 class="mb-0">Your Signed Up Shifts (<%= @my_signups.count %>)</h5>
+            <h5 class="mb-0">Your Signed Up Shifts (<%= @my_signups.count %> timeslots in <%= @shift_groups.count %> shift<%= 's' if @shift_groups.count != 1 %>)</h5>
           </div>
           <div class="card-body p-0">
             <div class="table-responsive">
@@ -28,21 +28,34 @@
                     <th>Date</th>
                     <th>Time</th>
                     <th>Program</th>
+                    <th>Duration</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <% @my_signups.each do |signup| %>
+                  <% @shift_groups.each do |group| %>
+                    <%
+                      duration_minutes = ((group[:end_time] - group[:start_time]) / 60).to_i
+                      hours = duration_minutes / 60
+                      minutes = duration_minutes % 60
+                      duration_str = hours > 0 ? "#{hours} hr" : ""
+                      duration_str += " #{minutes} min" if minutes > 0
+                    %>
                     <tr>
-                      <td><%= signup.timeslot.start_time.strftime("%A, %B %d") %></td>
+                      <td><%= group[:start_time].strftime("%A, %B %d") %></td>
                       <td>
-                        <%= signup.timeslot.start_time.strftime("%l:%M %p").strip %> -
-                        <%= signup.timeslot.end_time.strftime("%l:%M %p").strip %>
+                        <%= group[:start_time].strftime("%l:%M %p").strip %> -
+                        <%= group[:end_time].strftime("%l:%M %p").strip %>
                       </td>
-                      <td><%= signup.timeslot.program.name %></td>
+                      <td><%= group[:program_name] %></td>
+                      <td><%= duration_str.strip %></td>
                       <td>
-                        <%= link_to "Cancel", conference_volunteer_signup_path(@conference, signup),
-                            data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to cancel this shift?" },
+                        <%= link_to "Cancel",
+                            bulk_destroy_conference_volunteer_signups_path(@conference, signup_ids: group[:signups].map(&:id)),
+                            data: {
+                              turbo_method: :delete,
+                              turbo_confirm: "Are you sure you want to cancel this #{duration_str.strip} shift?"
+                            },
                             class: "btn btn-sm btn-outline-danger" %>
                       </td>
                     </tr>
