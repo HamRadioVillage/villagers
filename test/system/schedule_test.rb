@@ -110,4 +110,16 @@ class ScheduleTest < ApplicationSystemTestCase
     assert_text Date.today.strftime("%A, %B %d")
     assert_text (Date.today + 1.day).strftime("%A, %B %d")
   end
+
+  test "schedule has signup buttons with modal trigger" do
+    login_as @volunteer
+    visit conference_schedule_path(@conference)
+
+    # Verify Sign Up buttons exist with the correct data-action for modal
+    assert_selector "button[data-action='shift-signup#openModal']", text: "Sign Up"
+
+    # Verify the modal markup exists on the page
+    assert_selector "#shiftSignupModal", visible: :hidden
+    assert_selector "#shiftDuration", visible: :hidden
+  end
 end
