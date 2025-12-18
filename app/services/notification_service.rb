@@ -40,6 +40,28 @@ class NotificationService
           conference: conference
         ).deliver_later
       end
+
+      # Notify conference managers about the new signup(s)
+      notify_admins_of_signups(user: user, signups: signups, conference: conference)
+    end
+
+    def notify_admins_of_signups(user:, signups:, conference:)
+      return unless Village.email_enabled?
+
+      conference.conference_managers.find_each do |admin|
+        next if admin == user # Don't notify the volunteer themselves
+        next unless admin.should_notify_by_email?
+
+        # Send one notification per signup (real-time notifications)
+        signups.each do |signup|
+          VolunteerMailer.admin_signup_notification(
+            admin: admin,
+            volunteer: user,
+            signup: signup,
+            conference: conference
+          ).deliver_later
+        end
+      end
     end
 
     def notify_shift_cancelled(user:, timeslot:)

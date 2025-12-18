@@ -41,6 +41,23 @@ class VolunteerMailer < ApplicationMailer
     )
   end
 
+  def admin_signup_notification(admin:, volunteer:, signup:, conference:)
+    @admin = admin
+    @volunteer = volunteer
+    @signup = signup
+    @conference = conference
+    @village_name = Village.first&.name || "Villagers"
+
+    @timeslot = signup.timeslot
+    @program = @timeslot.conference_program.program
+    @fill_status = "#{@timeslot.current_volunteers_count}/#{@timeslot.max_volunteers}"
+
+    mail(
+      to: @admin.email,
+      subject: "[#{@village_name}] New Volunteer Signup - #{@conference.name}"
+    )
+  end
+
   private
 
   def group_signups_by_program(signups)

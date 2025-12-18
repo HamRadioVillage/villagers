@@ -19,6 +19,34 @@ class VolunteerMailerPreview < ActionMailer::Preview
     )
   end
 
+  # Preview: http://localhost:3000/rails/mailers/volunteer_mailer/admin_signup_notification
+  def admin_signup_notification
+    admin = User.first || User.new(email: "admin@example.com", name: "Conference Admin")
+    volunteer = User.second || User.new(email: "volunteer@example.com", name: "New Volunteer")
+    conference = Conference.first || Conference.new(
+      name: "Preview Conference",
+      city: "Las Vegas",
+      state: "NV",
+      country: "US"
+    )
+    program = Program.first || Program.new(name: "Preview Program")
+    conference_program = ConferenceProgram.new(conference: conference, program: program)
+    timeslot = Timeslot.new(
+      conference_program: conference_program,
+      start_time: Time.current.beginning_of_day + 10.hours,
+      max_volunteers: 5,
+      current_volunteers_count: 2
+    )
+    signup = VolunteerSignup.new(user: volunteer, timeslot: timeslot)
+
+    VolunteerMailer.admin_signup_notification(
+      admin: admin,
+      volunteer: volunteer,
+      signup: signup,
+      conference: conference
+    )
+  end
+
   private
 
   def build_preview_data

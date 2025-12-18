@@ -87,6 +87,17 @@ class Conference < ApplicationRecord
          .where(conference_roles: { role_name: ConferenceRole::CONFERENCE_LEAD })
   end
 
+  def conference_admins
+    users.joins(:conference_roles)
+         .where(conference_roles: { role_name: ConferenceRole::CONFERENCE_ADMIN })
+  end
+
+  def conference_managers
+    users.joins(:conference_roles)
+         .where(conference_roles: { role_name: [ ConferenceRole::CONFERENCE_LEAD, ConferenceRole::CONFERENCE_ADMIN ] })
+         .distinct
+  end
+
   def primary_lead
     conference_roles.find_by(role_name: ConferenceRole::CONFERENCE_LEAD)&.user
   end
