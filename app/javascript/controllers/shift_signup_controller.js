@@ -75,7 +75,12 @@ export default class extends Controller {
       { minutes: 120, label: "2 hours" },
       { minutes: 150, label: "2.5 hours" },
       { minutes: 180, label: "3 hours" },
-      { minutes: 240, label: "4 hours" }
+      { minutes: 210, label: "3.5 hours" },
+      { minutes: 240, label: "4 hours" },
+      { minutes: 270, label: "4.5 hours" },
+      { minutes: 300, label: "5 hours" },
+      { minutes: 330, label: "5.5 hours" },
+      { minutes: 360, label: "6 hours" }
     ]
 
     // Find max available duration
