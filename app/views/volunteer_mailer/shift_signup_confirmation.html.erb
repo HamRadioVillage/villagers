@@ -1,0 +1,49 @@
+<h1>Shift Signup Confirmed!</h1>
+
+<p>Hello <%= @user.name.presence || @user.email %>,</p>
+
+<p>Thank you for signing up to volunteer at <strong><%= @conference.name %></strong>!</p>
+
+<h2>Your Shift Details</h2>
+
+<table style="border-collapse: collapse; width: 100%; max-width: 600px;">
+  <thead>
+    <tr style="background-color: #f8f9fa;">
+      <th style="padding: 10px; text-align: left; border: 1px solid #dee2e6;">Program</th>
+      <th style="padding: 10px; text-align: left; border: 1px solid #dee2e6;">Date</th>
+      <th style="padding: 10px; text-align: left; border: 1px solid #dee2e6;">Time</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @grouped_signups.each do |shift| %>
+      <tr>
+        <td style="padding: 10px; border: 1px solid #dee2e6;"><%= shift[:program_name] %></td>
+        <td style="padding: 10px; border: 1px solid #dee2e6;"><%= shift[:date].strftime("%A, %B %d, %Y") %></td>
+        <td style="padding: 10px; border: 1px solid #dee2e6;"><%= shift[:start_time].strftime("%l:%M %p").strip %> - <%= shift[:end_time].strftime("%l:%M %p").strip %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<p style="margin-top: 15px;">
+  <strong>Total commitment:</strong> <%= @duration_display %>
+</p>
+
+<h2>What's Next?</h2>
+
+<p>
+  You can view or manage your shifts anytime by visiting your My Shifts page:
+</p>
+
+<p>
+  <%= link_to "View My Shifts", conference_volunteer_signups_url(@conference) %>
+</p>
+
+<p>
+  If you need to cancel your shift, you can do so from the My Shifts page up until the shift starts.
+</p>
+
+<p>
+  Thank you for volunteering!<br>
+  The <%= @village_name %> Team
+</p>

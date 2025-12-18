@@ -1,0 +1,45 @@
+class VolunteerMailer < ApplicationMailer
+  def shift_signup_confirmation(user:, signups:, conference:)
+    @user = user
+    @signups = signups
+    @conference = conference
+    @village_name = Village.first&.name || "Villagers"
+
+    # Group signups by program for easier display
+    @grouped_signups = group_signups_by_program(signups)
+
+    # Calculate total duration
+    @total_minutes = signups.size * 15
+    @duration_display = format_duration(@total_minutes)
+
+    mail(
+      to: @user.email,
+      subject: "[#{@village_name}] Shift Signup Confirmation - #{@conference.name}"
+    )
+  end
+
+  private
+
+  def group_signups_by_program(signups)
+    signups.group_by { |s| s.timeslot.conference_program.program.name }.map do |program_name, program_signups|
+      sorted = program_signups.sort_by { |s| s.timeslot.start_time }
+      {
+        program_name: program_name,
+        start_time: sorted.first.timeslot.start_time,
+        end_time: sorted.last.timeslot.start_time + 15.minutes,
+        date: sorted.first.timeslot.start_time.to_date,
+        slot_count: sorted.size
+      }
+    end
+  end
+
+  def format_duration(minutes)
+    hours = minutes / 60
+    mins = minutes % 60
+
+    parts = []
+    parts << "#{hours} hour#{'s' if hours != 1}" if hours > 0
+    parts << "#{mins} minute#{'s' if mins != 1}" if mins > 0
+    parts.join(" ")
+  end
+end

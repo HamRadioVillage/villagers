@@ -1,0 +1,26 @@
+Shift Signup Confirmed!
+
+Hello <%= @user.name.presence || @user.email %>,
+
+Thank you for signing up to volunteer at <%= @conference.name %>!
+
+YOUR SHIFT DETAILS
+==================
+<% @grouped_signups.each do |shift| %>
+Program: <%= shift[:program_name] %>
+Date: <%= shift[:date].strftime("%A, %B %d, %Y") %>
+Time: <%= shift[:start_time].strftime("%l:%M %p").strip %> - <%= shift[:end_time].strftime("%l:%M %p").strip %>
+<% end %>
+
+Total commitment: <%= @duration_display %>
+
+WHAT'S NEXT?
+============
+
+You can view or manage your shifts anytime by visiting your My Shifts page:
+<%= conference_volunteer_signups_url(@conference) %>
+
+If you need to cancel your shift, you can do so from the My Shifts page up until the shift starts.
+
+Thank you for volunteering!
+The <%= @village_name %> Team
