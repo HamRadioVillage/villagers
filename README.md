@@ -59,3 +59,69 @@ The application includes seed data for development and testing. Run `bin/rails d
 * Run tests: `bin/rails test`
 * Run system tests: `bin/rails test:system`
 * Lint code: `bin/rubocop`
+
+## Demo Mode
+
+Demo mode allows running Villagers as a publicly accessible demonstration instance. When enabled, the application provides a safe, self-resetting environment for potential users to explore.
+
+### Enabling Demo Mode
+
+Set the following in your `.env` file:
+
+```bash
+DEMO_MODE=true
+```
+
+Optional configuration:
+
+```bash
+DEMO_RESET_HOUR=4                           # Hour (UTC) for daily reset (default: 4)
+DEMO_BANNER_TEXT="Custom demo message"      # Custom banner text
+```
+
+### Demo Mode Features
+
+When demo mode is enabled:
+
+- **Email disabled**: All email sending is disabled
+- **Auto-confirmation**: New accounts don't require email verification
+- **Demo banner**: A warning banner displays at the top of all pages
+- **Login credentials**: Demo account credentials are shown on the login page
+- **Protected accounts**: Seed demo accounts cannot be deleted
+- **Health endpoint**: `/health` returns JSON with demo mode status
+
+### Enhanced Demo Seeds
+
+When `DEMO_MODE=true`, running `bin/rails db:seed` loads enhanced demo data including:
+
+| Data | Description |
+|------|-------------|
+| **3 Conferences** | DEF CON 31 (archived), DEF CON 32 (current), DEF CON 33 (future) |
+| **5 Programs** | Fox Hunting, Kit Building, Antenna Building, License Exams, On-Air Operations |
+| **Timeslots** | Pre-configured schedules with volunteer slots |
+| **Qualifications** | Licensed Ham, Soldering Certified, VE Certified |
+| **Sample Signups** | Volunteers pre-assigned to some shifts |
+
+### Automated Daily Reset
+
+To automatically reset the demo database daily:
+
+1. Add to crontab (`crontab -e`):
+   ```cron
+   0 4 * * * /path/to/villagers/scripts/reset_demo_database.sh >> /var/log/villagers/demo_reset.log 2>&1
+   ```
+
+2. Or use the rake task directly:
+   ```bash
+   bin/rails demo:reset
+   ```
+
+### Demo Rake Tasks
+
+```bash
+bin/rails demo:status  # Show demo mode configuration
+bin/rails demo:reset   # Drop, recreate, and reseed database
+bin/rails demo:seed    # Load demo data without reset
+```
+
+For complete documentation, see [docs/demo_mode.md](docs/demo_mode.md).
