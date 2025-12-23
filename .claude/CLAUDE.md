@@ -6,7 +6,7 @@ Ruby on Rails app for hacker conference village organizers to manage volunteer s
 
 ## Technology Stack
 
-- **Framework**: Ruby on Rails 7
+- **Framework**: Ruby on Rails 8
 - **Database**: PostgreSQL
 - **Frontend**: Bootstrap
 - **Authentication**: Devise
