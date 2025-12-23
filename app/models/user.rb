@@ -11,8 +11,22 @@ class User < ApplicationRecord
   # Skip email confirmation when email is disabled
   before_create :auto_confirm_if_email_disabled
 
+  # Protect demo accounts from deletion
+  before_destroy :prevent_demo_account_deletion
+
+  def demo_protected?
+    DemoMode.enabled? && DemoMode.protected_email?(email)
+  end
+
   private def auto_confirm_if_email_disabled
     skip_confirmation! unless Village.email_enabled?
+  end
+
+  private def prevent_demo_account_deletion
+    if demo_protected?
+      errors.add(:base, "Cannot delete protected demo accounts in demo mode")
+      throw(:abort)
+    end
   end
 
   # Role associations

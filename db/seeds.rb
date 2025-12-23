@@ -94,3 +94,11 @@ puts "Conference Lead: #{conference_lead.email}"
 puts "Conference Admins: #{conference_admin1.email}, #{conference_admin2.email}"
 puts "Volunteers: volunteer1@example.com through volunteer5@example.com"
 puts "\nAll users have password: password"
+
+# Load enhanced demo seeds if DEMO_MODE is enabled
+if ENV["DEMO_MODE"] == "true"
+  puts "\n" + "=" * 50
+  puts "DEMO_MODE detected - loading enhanced demo data..."
+  puts "=" * 50 + "\n"
+  load Rails.root.join("db/seeds/demo_seeds.rb")
+end

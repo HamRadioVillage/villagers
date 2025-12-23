@@ -1,0 +1,6 @@
+<% if DemoMode.enabled? %>
+  <div class="demo-banner alert alert-warning text-center mb-0 rounded-0 py-2" role="alert">
+    <strong><%= DemoMode.banner_text %></strong>
+    <span class="ms-2 text-muted small">(Resets in <%= DemoMode.formatted_time_until_reset %>)</span>
+  </div>
+<% end %>
