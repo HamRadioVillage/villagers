@@ -41,7 +41,7 @@ past_conference = Conference.find_or_create_by!(name: "DEF CON 31", village: vil
   c.end_date = Date.new(2023, 8, 13)
   c.conference_hours_start = Time.parse("10:00")
   c.conference_hours_end = Time.parse("18:00")
-  c.archived = true
+  c.archived_at = Time.current
 end
 conferences << past_conference
 puts "  Past Conference: #{past_conference.name}"
