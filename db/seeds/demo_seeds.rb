@@ -153,26 +153,30 @@ puts "  Programs: #{programs.map(&:name).join(', ')}"
     # Create day schedules with timeslots for the first 3 programs
     if idx < 3 && cp.timeslots.empty?
       (conf.start_date..conf.end_date).each do |day|
-        # Morning session
-        start_time = conf.conference_hours_start
+        # Morning session - 4 timeslots starting at conference start time
+        base_hour = conf.conference_hours_start.hour
+        base_min = conf.conference_hours_start.min
         4.times do |slot|
+          slot_start = day.to_datetime.change(hour: base_hour, min: base_min) + (slot * 15).minutes
+          slot_end = slot_start + 15.minutes
           Timeslot.find_or_create_by!(
             conference_program: cp,
-            date: day,
-            start_time: start_time + (slot * 15).minutes
+            start_time: slot_start
           ) do |t|
+            t.end_time = slot_end
             t.max_volunteers = cp.max_volunteers
           end
         end
 
-        # Afternoon session
-        start_time = conf.conference_hours_start + 4.hours
+        # Afternoon session - 4 timeslots starting 4 hours after conference start
         4.times do |slot|
+          slot_start = day.to_datetime.change(hour: base_hour, min: base_min) + 4.hours + (slot * 15).minutes
+          slot_end = slot_start + 15.minutes
           Timeslot.find_or_create_by!(
             conference_program: cp,
-            date: day,
-            start_time: start_time + (slot * 15).minutes
+            start_time: slot_start
           ) do |t|
+            t.end_time = slot_end
             t.max_volunteers = cp.max_volunteers
           end
         end
