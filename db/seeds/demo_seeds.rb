@@ -152,7 +152,7 @@ puts "  Programs: #{programs.map(&:name).join(', ')}"
 
     # Create day schedules with timeslots for the first 3 programs
     if idx < 3 && cp.timeslots.empty?
-      conf.conference_days.each do |day|
+      (conf.start_date..conf.end_date).each do |day|
         # Morning session
         start_time = conf.conference_hours_start
         4.times do |slot|
