@@ -5,6 +5,7 @@
     <div class="alert alert-info">
       <p class="mb-0"><%= link_to "Sign in", new_user_session_path %> or <%= link_to "create an account", new_user_registration_path %> to view your dashboard and sign up for volunteer shifts.</p>
     </div>
+    <%= render "shared/demo_credentials" %>
   <% end %>
 
   <% if user_signed_in? %>
