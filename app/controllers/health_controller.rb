@@ -10,7 +10,7 @@ class HealthController < ApplicationController
       demo_mode: DemoMode.enabled?
     }
 
-    if DemoMode.enabled?
+    if DemoMode.enabled? && DemoMode.next_reset_time
       health_status[:next_reset] = DemoMode.next_reset_time.iso8601
       health_status[:time_until_reset] = DemoMode.formatted_time_until_reset
     end

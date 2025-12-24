@@ -23,9 +23,6 @@ Add these to your `.env` file:
 # Required: Enable demo mode
 DEMO_MODE=true
 
-# Optional: Hour (UTC) for daily database reset (default: 4)
-DEMO_RESET_HOUR=4
-
 # Optional: Custom banner text
 DEMO_BANNER_TEXT="Demo Instance - Data resets daily"
 ```
@@ -76,7 +73,7 @@ The following accounts are created when demo mode is enabled:
 bin/rails demo:status
 ```
 
-Shows current demo mode configuration and protected accounts.
+Shows current demo mode configuration, last reset time, and protected accounts.
 
 ### Reset Demo Database
 
@@ -84,7 +81,7 @@ Shows current demo mode configuration and protected accounts.
 bin/rails demo:reset
 ```
 
-Drops and recreates the database with fresh demo data. Only works when `DEMO_MODE=true`.
+Drops and recreates the database with fresh demo data. Only works when `DEMO_MODE=true`. This task also records the reset time, which the banner uses to display a countdown until the next reset.
 
 ### Seed Demo Data Only
 
@@ -96,6 +93,14 @@ Loads enhanced demo data without resetting the database.
 
 ## Automated Daily Reset
 
+### How the Reset Countdown Works
+
+The demo banner shows a countdown until the next reset. This is based on a timestamp file (`tmp/demo_last_reset.txt`) that records when `demo:reset` last ran. The next reset is calculated as 24 hours after that time.
+
+This means:
+- The banner countdown reflects the actual cron schedule
+- No configuration needed to keep the banner in sync with cron
+
 ### Setting Up Cron
 
 To automatically reset the demo database daily:
@@ -105,7 +110,7 @@ To automatically reset the demo database daily:
    crontab -e
    ```
 
-2. Add the following line (resets at 4 AM UTC):
+2. Add the following line (example: reset at 4 AM UTC):
    ```cron
    0 4 * * * /path/to/villagers/scripts/reset_demo_database.sh >> /var/log/villagers/demo_reset.log 2>&1
    ```
@@ -124,6 +129,7 @@ The reset script is located at `scripts/reset_demo_database.sh`. It:
 - Drops and recreates the database
 - Runs all migrations
 - Seeds with demo data
+- Records the reset timestamp for the banner countdown
 - Logs all output with timestamps
 
 ### Troubleshooting Cron
@@ -156,7 +162,7 @@ The `/health` endpoint returns JSON with application status:
 curl http://localhost:3000/health
 ```
 
-Response when demo mode is enabled:
+Response when demo mode is enabled (after a reset has been run):
 ```json
 {
   "status": "ok",
@@ -164,6 +170,15 @@ Response when demo mode is enabled:
   "demo_mode": true,
   "next_reset": "2024-01-15T04:00:00Z",
   "time_until_reset": "12h 30m"
+}
+```
+
+Response when demo mode is enabled but no reset has been run yet:
+```json
+{
+  "status": "ok",
+  "database": true,
+  "demo_mode": true
 }
 ```
 
@@ -203,3 +218,4 @@ Demo mode includes several safety features:
 | `db/seeds/demo_seeds.rb` | Enhanced demo seed data |
 | `lib/tasks/demo.rake` | Demo rake tasks |
 | `scripts/reset_demo_database.sh` | Cron reset script |
+| `tmp/demo_last_reset.txt` | Timestamp of last reset (auto-generated) |

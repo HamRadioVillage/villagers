@@ -3,14 +3,21 @@ require "test_helper"
 class DemoModeTest < ActiveSupport::TestCase
   setup do
     @original_demo_mode = ENV["DEMO_MODE"]
-    @original_reset_hour = ENV["DEMO_RESET_HOUR"]
     @original_banner_text = ENV["DEMO_BANNER_TEXT"]
+    @timestamp_file = Rails.root.join("tmp", "demo_last_reset.txt")
+    @original_timestamp = File.read(@timestamp_file) if File.exist?(@timestamp_file)
   end
 
   teardown do
     ENV["DEMO_MODE"] = @original_demo_mode
-    ENV["DEMO_RESET_HOUR"] = @original_reset_hour
     ENV["DEMO_BANNER_TEXT"] = @original_banner_text
+
+    # Restore or clean up timestamp file
+    if @original_timestamp
+      File.write(@timestamp_file, @original_timestamp)
+    elsif File.exist?(@timestamp_file)
+      File.delete(@timestamp_file)
+    end
   end
 
   test "enabled? returns false by default" do
@@ -64,16 +71,6 @@ class DemoModeTest < ActiveSupport::TestCase
     assert credentials.all? { |c| c[:password] == "password" }
   end
 
-  test "reset_hour returns configured hour" do
-    ENV["DEMO_RESET_HOUR"] = "6"
-    assert_equal 6, DemoMode.reset_hour
-  end
-
-  test "reset_hour defaults to 4" do
-    ENV["DEMO_RESET_HOUR"] = nil
-    assert_equal 4, DemoMode.reset_hour
-  end
-
   test "banner_text returns configured text" do
     ENV["DEMO_BANNER_TEXT"] = "Custom Demo Text"
     assert_equal "Custom Demo Text", DemoMode.banner_text
@@ -81,26 +78,76 @@ class DemoModeTest < ActiveSupport::TestCase
 
   test "banner_text returns default when not configured" do
     ENV["DEMO_BANNER_TEXT"] = nil
-    ENV["DEMO_RESET_HOUR"] = "4"
     assert_match(/Demo Mode/, DemoMode.banner_text)
-    assert_match(/4:00 AM UTC/, DemoMode.banner_text)
+    assert_match(/resets daily/i, DemoMode.banner_text)
   end
 
-  test "next_reset_time returns future time" do
-    ENV["DEMO_RESET_HOUR"] = "4"
+  # Timestamp file tests
+  test "last_reset_time returns nil when no timestamp file exists" do
+    File.delete(@timestamp_file) if File.exist?(@timestamp_file)
+    assert_nil DemoMode.last_reset_time
+  end
+
+  test "last_reset_time returns time from timestamp file" do
+    reset_time = Time.current.utc
+    File.write(@timestamp_file, reset_time.iso8601)
+
+    result = DemoMode.last_reset_time
+    assert_in_delta reset_time.to_i, result.to_i, 1
+  end
+
+  test "record_reset! writes current time to timestamp file" do
+    DemoMode.record_reset!
+
+    assert File.exist?(@timestamp_file)
+    recorded_time = Time.parse(File.read(@timestamp_file))
+    assert_in_delta Time.current.to_i, recorded_time.to_i, 2
+  end
+
+  test "next_reset_time returns nil when no last reset recorded" do
+    File.delete(@timestamp_file) if File.exist?(@timestamp_file)
+    assert_nil DemoMode.next_reset_time
+  end
+
+  test "next_reset_time returns 24 hours after last reset" do
+    reset_time = 12.hours.ago.utc
+    File.write(@timestamp_file, reset_time.iso8601)
+
     next_reset = DemoMode.next_reset_time
-    assert next_reset > Time.current
+    expected = reset_time + 24.hours
+
+    assert_in_delta expected.to_i, next_reset.to_i, 1
   end
 
-  test "time_until_reset returns positive duration" do
-    ENV["DEMO_RESET_HOUR"] = "4"
-    assert DemoMode.time_until_reset > 0
+  test "time_until_reset returns nil when no last reset recorded" do
+    File.delete(@timestamp_file) if File.exist?(@timestamp_file)
+    assert_nil DemoMode.time_until_reset
+  end
+
+  test "time_until_reset returns positive duration when reset is in future" do
+    reset_time = 1.hour.ago.utc
+    File.write(@timestamp_file, reset_time.iso8601)
+
+    time_left = DemoMode.time_until_reset
+    assert time_left > 0
+    assert time_left < 24.hours
+  end
+
+  test "formatted_time_until_reset returns nil when no reset scheduled" do
+    File.delete(@timestamp_file) if File.exist?(@timestamp_file)
+    assert_nil DemoMode.formatted_time_until_reset
   end
 
   test "formatted_time_until_reset returns readable string" do
-    ENV["DEMO_RESET_HOUR"] = "4"
+    reset_time = 1.hour.ago.utc
+    File.write(@timestamp_file, reset_time.iso8601)
+
     formatted = DemoMode.formatted_time_until_reset
     assert formatted.is_a?(String)
     assert formatted.match?(/\d+[hm]/)
+  end
+
+  test "timestamp_file_path returns path in tmp directory" do
+    assert_equal Rails.root.join("tmp", "demo_last_reset.txt").to_s, DemoMode.timestamp_file_path.to_s
   end
 end

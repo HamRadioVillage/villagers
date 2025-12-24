@@ -75,7 +75,6 @@ DEMO_MODE=true
 Optional configuration:
 
 ```bash
-DEMO_RESET_HOUR=4                           # Hour (UTC) for daily reset (default: 4)
 DEMO_BANNER_TEXT="Custom demo message"      # Custom banner text
 ```
 

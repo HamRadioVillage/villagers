@@ -41,9 +41,12 @@ namespace :demo do
     Rake::Task["db:seed"].invoke
     puts "      Seeding complete"
 
+    # Record the reset time for banner countdown
+    DemoMode.record_reset!
+
     puts "\n" + "=" * 60
     puts "Demo reset completed at: #{Time.current}"
-    puts "Next reset scheduled for: #{DemoMode.next_reset_time}"
+    puts "Next reset in 24 hours: #{DemoMode.next_reset_time}"
     puts "=" * 60
   end
 
@@ -51,13 +54,17 @@ namespace :demo do
   task status: :environment do
     puts "Demo Mode Status"
     puts "-" * 40
-    puts "Enabled:           #{DemoMode.enabled?}"
-    puts "Reset Hour (UTC):  #{DemoMode.reset_hour}:00"
-    puts "Banner Text:       #{DemoMode.banner_text}"
+    puts "Enabled:          #{DemoMode.enabled?}"
+    puts "Banner Text:      #{DemoMode.banner_text}"
 
     if DemoMode.enabled?
-      puts "Next Reset:        #{DemoMode.next_reset_time}"
-      puts "Time Until Reset:  #{DemoMode.formatted_time_until_reset}"
+      if DemoMode.last_reset_time
+        puts "Last Reset:       #{DemoMode.last_reset_time}"
+        puts "Next Reset:       #{DemoMode.next_reset_time}"
+        puts "Time Until Reset: #{DemoMode.formatted_time_until_reset || 'Past due'}"
+      else
+        puts "Last Reset:       Never (run demo:reset to initialize)"
+      end
     end
 
     puts "-" * 40

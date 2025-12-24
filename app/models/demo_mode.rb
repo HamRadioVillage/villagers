@@ -10,10 +10,12 @@
 # - Demo credentials are shown on login
 # - Seed demo accounts are protected from deletion
 #
+# The reset schedule is tracked via a timestamp file written by the
+# demo:reset rake task, allowing the banner to show accurate countdown.
+#
 # Configuration via environment variables:
 #   DEMO_MODE=true                    # Enable demo mode
-#   DEMO_RESET_HOUR=4                 # Hour (UTC) to reset database
-#   DEMO_BANNER_TEXT="Custom Text"    # Custom banner text
+#   DEMO_BANNER_TEXT="Custom Text"    # Custom banner text (optional)
 module DemoMode
   PROTECTED_EMAILS = %w[
     admin@example.com
@@ -26,6 +28,9 @@ module DemoMode
     volunteer4@example.com
     volunteer5@example.com
   ].freeze
+
+  TIMESTAMP_FILE = "demo_last_reset.txt"
+  RESET_INTERVAL = 24.hours
 
   class << self
     def enabled?
@@ -48,27 +53,45 @@ module DemoMode
       ]
     end
 
-    def reset_hour
-      ENV.fetch("DEMO_RESET_HOUR", 4).to_i
+    def banner_text
+      ENV.fetch("DEMO_BANNER_TEXT") { "Demo Mode - Data resets daily" }
     end
 
-    def banner_text
-      ENV.fetch("DEMO_BANNER_TEXT") { "Demo Mode - Data resets daily at #{reset_hour}:00 AM UTC" }
+    def timestamp_file_path
+      Rails.root.join("tmp", TIMESTAMP_FILE)
+    end
+
+    def last_reset_time
+      return nil unless File.exist?(timestamp_file_path)
+
+      Time.parse(File.read(timestamp_file_path)).utc
+    rescue ArgumentError
+      nil
+    end
+
+    def record_reset!
+      File.write(timestamp_file_path, Time.current.utc.iso8601)
     end
 
     def next_reset_time
-      now = Time.current.utc
-      reset_time = now.change(hour: reset_hour, min: 0, sec: 0)
-      reset_time += 1.day if now >= reset_time
-      reset_time
+      return nil unless last_reset_time
+
+      last_reset_time + RESET_INTERVAL
     end
 
     def time_until_reset
+      return nil unless next_reset_time
+
       next_reset_time - Time.current.utc
     end
 
     def formatted_time_until_reset
-      seconds = time_until_reset.to_i
+      remaining = time_until_reset
+      return nil unless remaining
+
+      seconds = remaining.to_i
+      return nil if seconds <= 0
+
       hours = seconds / 3600
       minutes = (seconds % 3600) / 60
 
