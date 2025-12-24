@@ -8,6 +8,10 @@ namespace :demo do
       exit 1
     end
 
+    # Allow destructive database operations in production for demo mode
+    # This is safe because demo mode is explicitly designed for resettable instances
+    ENV["DISABLE_DATABASE_ENVIRONMENT_CHECK"] = "1"
+
     puts "=" * 60
     puts "Demo Database Reset"
     puts "Started at: #{Time.current}"
