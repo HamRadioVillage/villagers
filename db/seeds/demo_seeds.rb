@@ -30,47 +30,51 @@ UserRole.find_or_create_by!(user: village_admin, role: village_admin_role)
 puts "  Village Admin: #{village_admin.email}"
 
 # Create multiple conferences (past, current, future)
+# Using relative dates so demo data stays relevant regardless of when it's seeded
 conferences = []
 
-# Past conference
-past_conference = Conference.find_or_create_by!(name: "DEF CON 31", village: village) do |c|
+# Past conference (30 days ago, archived)
+past_start = Date.current - 30.days
+past_conference = Conference.find_or_create_by!(name: "Past Demo Conference", village: village) do |c|
   c.country = "US"
   c.state = "NV"
   c.city = "Las Vegas"
-  c.start_date = Date.new(2023, 8, 10)
-  c.end_date = Date.new(2023, 8, 13)
+  c.start_date = past_start
+  c.end_date = past_start + 3.days
   c.conference_hours_start = Time.parse("10:00")
   c.conference_hours_end = Time.parse("18:00")
   c.archived_at = Time.current
 end
 conferences << past_conference
-puts "  Past Conference: #{past_conference.name}"
+puts "  Past Conference: #{past_conference.name} (#{past_conference.start_date} - #{past_conference.end_date})"
 
-# Current/Recent conference
-current_conference = Conference.find_or_create_by!(name: "DEF CON 32", village: village) do |c|
+# Current conference (started yesterday, ends in 2 days - "in progress")
+current_start = Date.current - 1.day
+current_conference = Conference.find_or_create_by!(name: "Current Demo Conference", village: village) do |c|
   c.country = "US"
   c.state = "NV"
   c.city = "Las Vegas"
-  c.start_date = Date.new(2024, 8, 8)
-  c.end_date = Date.new(2024, 8, 11)
+  c.start_date = current_start
+  c.end_date = current_start + 3.days
   c.conference_hours_start = Time.parse("09:00")
   c.conference_hours_end = Time.parse("18:00")
 end
 conferences << current_conference
-puts "  Current Conference: #{current_conference.name}"
+puts "  Current Conference: #{current_conference.name} (#{current_conference.start_date} - #{current_conference.end_date})"
 
-# Future conference
-future_conference = Conference.find_or_create_by!(name: "DEF CON 33", village: village) do |c|
+# Future conference (starts in 30 days)
+future_start = Date.current + 30.days
+future_conference = Conference.find_or_create_by!(name: "Future Demo Conference", village: village) do |c|
   c.country = "US"
   c.state = "NV"
   c.city = "Las Vegas"
-  c.start_date = Date.new(2025, 8, 7)
-  c.end_date = Date.new(2025, 8, 10)
+  c.start_date = future_start
+  c.end_date = future_start + 3.days
   c.conference_hours_start = Time.parse("10:00")
   c.conference_hours_end = Time.parse("19:00")
 end
 conferences << future_conference
-puts "  Future Conference: #{future_conference.name}"
+puts "  Future Conference: #{future_conference.name} (#{future_conference.start_date} - #{future_conference.end_date})"
 
 # Create conference lead
 conference_lead = User.find_or_create_by!(email: "coordinator@example.com") do |u|
@@ -186,20 +190,22 @@ puts "  Programs: #{programs.map(&:name).join(', ')}"
 end
 puts "  Conference programs and timeslots created"
 
-# Create some sample volunteer signups for the current conference
+# Create some sample volunteer signups for current and future conferences
 # Use different volunteers for different programs to avoid overlap conflicts
-current_conference.conference_programs.each_with_index do |cp, program_idx|
-  cp.timeslots.limit(2).each_with_index do |timeslot, slot_idx|
-    # Rotate through volunteers, offset by program index to avoid overlaps
-    volunteer = volunteer_users[(program_idx + slot_idx) % volunteer_users.size]
-    begin
-      VolunteerSignup.find_or_create_by!(user: volunteer, timeslot: timeslot)
-    rescue ActiveRecord::RecordInvalid
-      # Skip if volunteer already has an overlapping signup
+[ current_conference, future_conference ].each do |conf|
+  conf.conference_programs.each_with_index do |cp, program_idx|
+    cp.timeslots.limit(2).each_with_index do |timeslot, slot_idx|
+      # Rotate through volunteers, offset by program index to avoid overlaps
+      volunteer = volunteer_users[(program_idx + slot_idx) % volunteer_users.size]
+      begin
+        VolunteerSignup.find_or_create_by!(user: volunteer, timeslot: timeslot)
+      rescue ActiveRecord::RecordInvalid
+        # Skip if volunteer already has an overlapping signup
+      end
     end
   end
 end
-puts "  Sample volunteer signups created"
+puts "  Sample volunteer signups created for current and future conferences"
 
 # Create qualifications
 qualifications = []
