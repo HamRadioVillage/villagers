@@ -187,10 +187,16 @@ end
 puts "  Conference programs and timeslots created"
 
 # Create some sample volunteer signups for the current conference
-current_conference.conference_programs.each do |cp|
-  cp.timeslots.limit(3).each_with_index do |timeslot, idx|
-    volunteer = volunteer_users[idx % volunteer_users.size]
-    VolunteerSignup.find_or_create_by!(user: volunteer, timeslot: timeslot)
+# Use different volunteers for different programs to avoid overlap conflicts
+current_conference.conference_programs.each_with_index do |cp, program_idx|
+  cp.timeslots.limit(2).each_with_index do |timeslot, slot_idx|
+    # Rotate through volunteers, offset by program index to avoid overlaps
+    volunteer = volunteer_users[(program_idx + slot_idx) % volunteer_users.size]
+    begin
+      VolunteerSignup.find_or_create_by!(user: volunteer, timeslot: timeslot)
+    rescue ActiveRecord::RecordInvalid
+      # Skip if volunteer already has an overlapping signup
+    end
   end
 end
 puts "  Sample volunteer signups created"
