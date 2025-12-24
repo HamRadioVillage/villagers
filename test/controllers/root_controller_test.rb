@@ -362,4 +362,28 @@ class RootControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".card-header", text: /Open Opportunities/
   end
+
+  # Demo Mode Tests
+  test "unauthenticated user sees demo credentials when demo mode enabled" do
+    ENV["DEMO_MODE"] = "true"
+
+    get root_url
+
+    assert_response :success
+    assert_select ".demo-credentials"
+    assert_select ".demo-credentials", text: /admin@example.com/
+  ensure
+    ENV["DEMO_MODE"] = nil
+  end
+
+  test "unauthenticated user does not see demo credentials when demo mode disabled" do
+    ENV["DEMO_MODE"] = "false"
+
+    get root_url
+
+    assert_response :success
+    assert_select ".demo-credentials", count: 0
+  ensure
+    ENV["DEMO_MODE"] = nil
+  end
 end
