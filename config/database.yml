@@ -1,33 +1,39 @@
-# PostgreSQL. Versions 9.3 and up are supported.
-#
-# Install the pg driver:
-#   gem install pg
-# On macOS with Homebrew:
-#   gem install pg -- --with-pg-config=/usr/local/bin/pg_config
-# On macOS with MacPorts:
-#   gem install pg -- --with-pg-config=/opt/local/lib/postgresql84/bin/pg_config
-# On Windows:
-#   gem install pg
-#       Choose the win32 build.
-#       Install PostgreSQL and put its /bin directory on your path.
-#
-# Configure Using Gemfile
-# gem "pg"
-#
+<%#
+  Database configuration supporting either PostgreSQL (default) or MySQL/MariaDB.
+
+  Select the engine with the DATABASE_ADAPTER environment variable:
+    DATABASE_ADAPTER=postgresql   (default)  -> requires the "pg" gem
+    DATABASE_ADAPTER=mysql2                   -> requires the "mysql2" gem
+  Both gems are bundled, so no Gemfile change is needed to switch.
+
+  Client libraries:
+    PostgreSQL:     apt-get install libpq-dev          / brew install libpq
+    MySQL/MariaDB:  apt-get install libmariadb-dev      / brew install mariadb
+
+  Supported versions for the day_schedules JSON column:
+    PostgreSQL 9.3+   /   MySQL 5.7+   /   MariaDB 10.2+
+%>
+<%
+  db_adapter = ENV.fetch("DATABASE_ADAPTER", "postgresql")
+  mysql      = db_adapter == "mysql2"
+%>
 default: &default
-  adapter: postgresql
-  encoding: unicode
+  adapter: <%= db_adapter %>
+  encoding: <%= mysql ? "utf8mb4" : "unicode" %>
+<% if mysql %>
+  collation: utf8mb4_unicode_ci
+<% end %>
   # For details on connection pooling, see Rails configuration guide
   # https://guides.rubyonrails.org/configuring.html#database-pooling
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  username: <%= ENV.fetch("DATABASE_USERNAME") { mysql ? "root" : "postgres" } %>
+  password: <%= ENV.fetch("DATABASE_PASSWORD") { "" } %>
+  host: <%= ENV.fetch("DATABASE_HOST") { "localhost" } %>
+  port: <%= ENV.fetch("DATABASE_PORT") { mysql ? 3306 : 5432 } %>
 
 development:
   <<: *default
   database: villagers_development
-  username: <%= ENV.fetch("DATABASE_USERNAME") { "postgres" } %>
-  password: <%= ENV.fetch("DATABASE_PASSWORD") { "" } %>
-  host: <%= ENV.fetch("DATABASE_HOST") { "localhost" } %>
-  port: <%= ENV.fetch("DATABASE_PORT") { 5432 } %>
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
@@ -35,10 +41,6 @@ development:
 test:
   <<: *default
   database: villagers_test
-  username: <%= ENV.fetch("DATABASE_USERNAME") { "postgres" } %>
-  password: <%= ENV.fetch("DATABASE_PASSWORD") { "" } %>
-  host: <%= ENV.fetch("DATABASE_HOST") { "localhost" } %>
-  port: <%= ENV.fetch("DATABASE_PORT") { 5432 } %>
 
 # As with config/credentials.yml, you never want to store sensitive information,
 # like your database password, in your source code. If your source code is
@@ -48,13 +50,14 @@ test:
 # variable when you boot the app. For example:
 #
 #   DATABASE_URL="postgres://myuser:mypass@localhost/somedatabase"
+#   DATABASE_URL="mysql2://myuser:mypass@localhost/somedatabase"
 #
 # If DATABASE_URL is provided, it will be used as configuration information;
 # this means you don't need to set any of these config values. If you want to
 # override any of these values, you can use the DATABASE_URL environment variable
 # with the following format:
 #
-#   postgres://[user[:password]@][host][:port][/database]
+#   <adapter>://[user[:password]@][host][:port][/database]
 #
 # Read https://guides.rubyonrails.org/configuring.html#configuring-a-database
 # for a full overview on how database connection configuration can be specified.
@@ -63,31 +66,15 @@ production:
   primary:
     <<: *default
     database: <%= ENV.fetch("DATABASE_NAME") { "villagers_production" } %>
-    username: <%= ENV.fetch("DATABASE_USERNAME") { "postgres" } %>
-    password: <%= ENV.fetch("DATABASE_PASSWORD") { "" } %>
-    host: <%= ENV.fetch("DATABASE_HOST") { "localhost" } %>
-    port: <%= ENV.fetch("DATABASE_PORT") { 5432 } %>
   cache:
     <<: *default
     database: <%= ENV.fetch("CACHE_DATABASE_NAME") { "villagers_production_cache" } %>
-    username: <%= ENV.fetch("DATABASE_USERNAME") { "postgres" } %>
-    password: <%= ENV.fetch("DATABASE_PASSWORD") { "" } %>
-    host: <%= ENV.fetch("DATABASE_HOST") { "localhost" } %>
-    port: <%= ENV.fetch("DATABASE_PORT") { 5432 } %>
     migrations_paths: db/cache_migrate
   queue:
     <<: *default
     database: <%= ENV.fetch("QUEUE_DATABASE_NAME") { "villagers_production_queue" } %>
-    username: <%= ENV.fetch("DATABASE_USERNAME") { "postgres" } %>
-    password: <%= ENV.fetch("DATABASE_PASSWORD") { "" } %>
-    host: <%= ENV.fetch("DATABASE_HOST") { "localhost" } %>
-    port: <%= ENV.fetch("DATABASE_PORT") { 5432 } %>
     migrations_paths: db/queue_migrate
   cable:
     <<: *default
     database: <%= ENV.fetch("CABLE_DATABASE_NAME") { "villagers_production_cable" } %>
-    username: <%= ENV.fetch("DATABASE_USERNAME") { "postgres" } %>
-    password: <%= ENV.fetch("DATABASE_PASSWORD") { "" } %>
-    host: <%= ENV.fetch("DATABASE_HOST") { "localhost" } %>
-    port: <%= ENV.fetch("DATABASE_PORT") { 5432 } %>
     migrations_paths: db/cable_migrate

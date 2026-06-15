@@ -17,7 +17,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_18_055559) do
   create_table "conference_programs", force: :cascade do |t|
     t.bigint "conference_id", null: false
     t.datetime "created_at", null: false
-    t.jsonb "day_schedules", default: {}
+    t.json "day_schedules"
     t.integer "max_volunteers"
     t.bigint "program_id", null: false
     t.text "public_description"
