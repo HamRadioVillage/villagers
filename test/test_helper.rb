@@ -1,4 +1,11 @@
 ENV["RAILS_ENV"] ||= "test"
+
+# Dummy OAuth credentials so the OmniAuth provider/middleware is registered
+# under test. Combined with OmniAuth.config.test_mode, no real HTTP is made.
+ENV["OAUTH_CLIENT_ID"] ||= "test-oauth-client"
+ENV["OAUTH_CLIENT_SECRET"] ||= "test-oauth-secret"
+ENV["OAUTH_SITE"] ||= "https://oauth.test"
+
 require_relative "../config/environment"
 require "rails/test_help"
 
@@ -17,6 +24,28 @@ module ActiveSupport
 
     # Add more helper methods to be used by all tests here...
   end
+end
+
+# Run OmniAuth in test mode so no real HTTP requests are made to the provider.
+OmniAuth.config.test_mode = true
+OmniAuth.config.logger = Rails.logger
+
+# Build a fake OmniAuth auth hash for the villager_oauth provider and register
+# it so the next request to the callback uses it. Pass overrides for uid/email/name.
+def stub_villager_oauth(uid: "oauth-uid-123", email: "oauth.user@example.com", name: "OAuth User")
+  auth = OmniAuth::AuthHash.new(
+    provider: "villager_oauth",
+    uid: uid,
+    info: { email: email, name: name }
+  )
+  OmniAuth.config.mock_auth[:villager_oauth] = auth
+  Rails.application.env_config["omniauth.auth"] = auth
+  auth
+end
+
+# Simulate a provider-side failure (e.g. user denied access, invalid token).
+def stub_villager_oauth_failure(reason = :invalid_credentials)
+  OmniAuth.config.mock_auth[:villager_oauth] = reason
 end
 
 # Include Devise test helpers

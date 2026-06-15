@@ -14,7 +14,10 @@ module Villagers
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
     # Common ones are `templates`, `generators`, or `middleware`, for example.
-    config.autoload_lib(ignore: %w[assets tasks])
+    # `omniauth` is excluded because its constant is `OmniAuth` (capital A),
+    # which Zeitwerk would not infer from the directory name; the strategy is
+    # required manually in config/initializers/omniauth.rb instead.
+    config.autoload_lib(ignore: %w[assets tasks omniauth])
 
     # Configuration for the application, engines, and railties goes here.
     #
