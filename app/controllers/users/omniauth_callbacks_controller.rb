@@ -5,10 +5,19 @@ module Users
       auth = request.env["omniauth.auth"]
       identity = OauthIdentity.new(auth)
 
+      # Diagnostic: surface the roles claim received from the provider. Logged at
+      # debug level so it's visible while testing (development default) without
+      # adding noise in production.
+      Rails.logger.debug { "[OAuth] roles claim for #{identity.email}: #{identity.roles.inspect}" }
+
       # Authorization gate: only provision/sign in users whose roles claim
       # satisfies OAUTH_ALLOWED_ROLES_REGEX (no-op when that isn't configured).
       # Re-checked every login so revoked access at the IdP takes effect.
       unless OauthAccessPolicy.permitted?(identity)
+        Rails.logger.info do
+          "[OAuth] access denied for #{identity.email}: roles #{identity.roles.inspect} " \
+            "did not match #{VillagerOauthConfig.allowed_roles_pattern.inspect}"
+        end
         redirect_to new_user_session_path,
                     alert: "Your account isn't authorized to access this village."
         return
