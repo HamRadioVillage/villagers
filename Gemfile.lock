@@ -214,7 +214,8 @@ GEM
     mini_magick (5.3.1)
       logger
     mini_mime (1.1.5)
-    minitest (5.27.0)
+    minitest (6.0.1)
+      prism (~> 1.5)
     msgpack (1.8.0)
     multipart-post (2.4.1)
     mysql2 (0.5.7)
@@ -461,7 +462,7 @@ DEPENDENCIES
   kamal
   letter_opener
   mailgun-ruby (~> 1.2)
-  minitest (~> 5.25)
+  minitest (~> 6.0)
   pg (~> 1.6)
   mysql2 (~> 0.5)
   propshaft
