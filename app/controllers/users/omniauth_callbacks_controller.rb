@@ -10,6 +10,19 @@ module Users
       # adding noise in production.
       Rails.logger.debug { "[OAuth] roles claim for #{identity.email}: #{identity.roles.inspect}" }
 
+      # A blank uid cannot identify anyone: matching on it would resolve every
+      # such login to the first blank-uid account. Refuse rather than risk
+      # signing the wrong person in (usually means OAUTH_UID_FIELD is misconfigured
+      # or the provider's userinfo omits that field).
+      if identity.uid.blank?
+        Rails.logger.error do
+          "[OAuth] no uid for #{identity.email} (check OAUTH_UID_FIELD / provider userinfo); refusing sign-in"
+        end
+        redirect_to new_user_session_path,
+                    alert: "Single sign-on failed: the identity provider didn't supply a user id."
+        return
+      end
+
       # Authorization gate: only provision/sign in users whose roles claim
       # satisfies OAUTH_ALLOWED_ROLES_REGEX (no-op when that isn't configured).
       # Re-checked every login so revoked access at the IdP takes effect.

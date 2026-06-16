@@ -13,8 +13,13 @@ class User < ApplicationRecord
   # with the same email (linked) -> brand new just-in-time provisioned user.
   # OAuth users are auto-confirmed since the provider vouches for the email.
   def self.from_omniauth(auth)
-    identity = find_by(provider: auth.provider, uid: auth.uid)
-    return identity if identity
+    # Only match an existing identity by a present uid. A blank uid identifies
+    # no one, so matching on it would collapse every blank-uid login onto the
+    # first such account (callers should reject blank uids before this).
+    if auth.uid.present?
+      identity = find_by(provider: auth.provider, uid: auth.uid)
+      return identity if identity
+    end
 
     user = find_or_initialize_by(email: auth.info.email)
     user.provider = auth.provider
