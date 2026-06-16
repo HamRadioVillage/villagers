@@ -218,10 +218,9 @@ GEM
     minitest (5.27.0)
     msgpack (1.8.0)
     multipart-post (2.4.1)
-    net-http (0.9.1)
     mysql2 (0.5.7)
       bigdecimal
-      uri (>= 0.11.1)
+    net-http (0.9.1)
     net-imap (0.6.2)
       date
       net-protocol
@@ -463,8 +462,8 @@ DEPENDENCIES
   letter_opener
   mailgun-ruby (~> 1.4)
   minitest (~> 5.25)
-  pg (~> 1.6)
   mysql2 (~> 0.5)
+  pg (~> 1.6)
   propshaft
   puma (>= 5.0)
   pundit (~> 2.3)
