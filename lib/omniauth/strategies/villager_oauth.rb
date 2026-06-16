@@ -11,7 +11,7 @@ module OmniAuth
     #   OAUTH_TOKEN_URL      - token endpoint     (absolute, or relative to site)
     #   OAUTH_USERINFO_URL   - userinfo endpoint  (absolute, or relative to site)
     #   OAUTH_SCOPE          - requested scope(s) (default: "shifts")
-    #   OAUTH_UID_FIELD      - userinfo key holding the unique id (default: "id")
+    #   OAUTH_UID_FIELD      - userinfo key holding the unique id (default: "sub", the OIDC subject)
     #   OAUTH_EMAIL_FIELD    - userinfo key holding the email     (default: "email")
     #   OAUTH_NAME_FIELD     - userinfo key holding the name      (default: "name")
     #
@@ -57,7 +57,7 @@ module OmniAuth
       end
 
       def uid_field
-        ENV.fetch("OAUTH_UID_FIELD", "id")
+        ENV.fetch("OAUTH_UID_FIELD", "sub")
       end
 
       def email_field
