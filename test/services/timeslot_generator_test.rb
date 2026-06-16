@@ -64,8 +64,8 @@ class TimeslotGeneratorTest < ActiveSupport::TestCase
 
     # Should generate 4 timeslots for day 0 and 4 for day 1
     assert_equal 8, @conference_program.timeslots.count
-    day_0_timeslots = @conference_program.timeslots.where("start_time::date = ?", @conference.start_date)
-    day_1_timeslots = @conference_program.timeslots.where("start_time::date = ?", @conference.end_date)
+    day_0_timeslots = @conference_program.timeslots.where("DATE(start_time) = ?", @conference.start_date)
+    day_1_timeslots = @conference_program.timeslots.where("DATE(start_time) = ?", @conference.end_date)
     assert_equal 4, day_0_timeslots.count
     assert_equal 4, day_1_timeslots.count
   end
