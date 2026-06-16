@@ -1,5 +1,4 @@
 require "test_helper"
-require "minitest/mock"
 
 class RegistrationDisabledTest < ActionDispatch::IntegrationTest
   # --- Self-registration enabled (default) ---------------------------------
@@ -21,7 +20,7 @@ class RegistrationDisabledTest < ActionDispatch::IntegrationTest
   # --- Self-registration disabled ------------------------------------------
 
   test "sign-up page redirects to sign in when self-registration is disabled" do
-    SelfRegistration.stub(:enabled?, false) do
+    with_env("SELF_REGISTRATION_ENABLED" => "false") do
       get new_user_registration_path
       assert_redirected_to new_user_session_path
       assert flash[:alert].present?
@@ -29,7 +28,7 @@ class RegistrationDisabledTest < ActionDispatch::IntegrationTest
   end
 
   test "creating an account is blocked when self-registration is disabled" do
-    SelfRegistration.stub(:enabled?, false) do
+    with_env("SELF_REGISTRATION_ENABLED" => "false") do
       assert_no_difference "User.count" do
         post user_registration_path, params: {
           user: { email: "blocked@example.com", password: "password123", password_confirmation: "password123" }
@@ -40,7 +39,7 @@ class RegistrationDisabledTest < ActionDispatch::IntegrationTest
   end
 
   test "sign-up link is hidden on the login page when self-registration is disabled" do
-    SelfRegistration.stub(:enabled?, false) do
+    with_env("SELF_REGISTRATION_ENABLED" => "false") do
       get new_user_session_path
       assert_response :success
       assert_select "a[href=?]", new_user_registration_path, count: 0
@@ -56,7 +55,7 @@ class RegistrationDisabledTest < ActionDispatch::IntegrationTest
       info: { email: "viasso@example.com", name: "Via SSO" }
     )
 
-    SelfRegistration.stub(:enabled?, false) do
+    with_env("SELF_REGISTRATION_ENABLED" => "false") do
       assert_difference "User.count", 1 do
         user = User.from_omniauth(auth)
         assert user.persisted?

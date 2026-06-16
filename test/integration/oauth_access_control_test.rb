@@ -1,11 +1,10 @@
 require "test_helper"
-require "minitest/mock"
 
 class OauthAccessControlTest < ActionDispatch::IntegrationTest
   test "allows sign in when a role matches the configured pattern" do
     stub_villager_oauth(uid: "ok-1", email: "allowed@example.com", roles: %w[village_admin])
 
-    VillagerOauthConfig.stub(:allowed_roles_pattern, /\Avillage_admin\z/) do
+    with_env("OAUTH_ALLOWED_ROLES_REGEX" => '\Avillage_admin\z') do
       assert_difference "User.count", 1 do
         get user_villager_oauth_omniauth_callback_path
       end
@@ -16,7 +15,7 @@ class OauthAccessControlTest < ActionDispatch::IntegrationTest
   test "denies sign in and provisions nothing when no role matches" do
     stub_villager_oauth(uid: "no-1", email: "denied@example.com", roles: %w[volunteer])
 
-    VillagerOauthConfig.stub(:allowed_roles_pattern, /\Avillage_admin\z/) do
+    with_env("OAUTH_ALLOWED_ROLES_REGEX" => '\Avillage_admin\z') do
       assert_no_difference "User.count" do
         get user_villager_oauth_omniauth_callback_path
       end
@@ -28,7 +27,7 @@ class OauthAccessControlTest < ActionDispatch::IntegrationTest
   test "allows sign in when no pattern is configured (gate off)" do
     stub_villager_oauth(uid: "open-1", email: "open@example.com", roles: [])
 
-    VillagerOauthConfig.stub(:allowed_roles_pattern, nil) do
+    with_env("OAUTH_ALLOWED_ROLES_REGEX" => "") do
       assert_difference "User.count", 1 do
         get user_villager_oauth_omniauth_callback_path
       end

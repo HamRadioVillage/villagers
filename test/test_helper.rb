@@ -30,7 +30,18 @@ module ActiveSupport
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
 
-    # Add more helper methods to be used by all tests here...
+    # Temporarily set environment variables for the duration of a block,
+    # restoring (or deleting) them afterward. Used to exercise config-driven
+    # behavior; minitest 6 dropped Minitest::Mock/#stub, and these flags read
+    # ENV live, so this is the clean way to flip them in tests.
+    #   with_env("SELF_REGISTRATION_ENABLED" => "false") { ... }
+    def with_env(vars)
+      originals = vars.keys.index_with { |key| ENV[key] }
+      vars.each { |key, value| value.nil? ? ENV.delete(key) : ENV[key] = value }
+      yield
+    ensure
+      originals.each { |key, value| value.nil? ? ENV.delete(key) : ENV[key] = value }
+    end
   end
 end
 

@@ -1,5 +1,4 @@
 require "test_helper"
-require "minitest/mock"
 
 class OauthIdentityTest < ActiveSupport::TestCase
   def auth(roles: [], email: "person@example.com", name: "A Person", uid: "uid-1", claim_key: "roles")
@@ -30,7 +29,7 @@ class OauthIdentityTest < ActiveSupport::TestCase
 
   test "roles reads the configurable claim key" do
     identity = OauthIdentity.new(auth(roles: %w[admin], claim_key: "current_roles"))
-    VillagerOauthConfig.stub(:roles_claim, "current_roles") do
+    with_env("OAUTH_ROLES_CLAIM" => "current_roles") do
       assert_equal %w[admin], identity.roles
     end
   end

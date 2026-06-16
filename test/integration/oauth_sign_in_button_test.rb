@@ -1,5 +1,4 @@
 require "test_helper"
-require "minitest/mock"
 
 class OauthSignInButtonTest < ActionDispatch::IntegrationTest
   # OAuth is enabled in the test environment (dummy creds set in test_helper).
@@ -16,7 +15,8 @@ class OauthSignInButtonTest < ActionDispatch::IntegrationTest
   end
 
   test "sign-in page renders without the OAuth button when not configured" do
-    VillagerOauthConfig.stub(:enabled?, false) do
+    # enabled? is false when no client id is configured.
+    with_env("OAUTH_CLIENT_ID" => nil) do
       get new_user_session_path
       assert_response :success
       assert_select "form[action=?]", user_villager_oauth_omniauth_authorize_path, count: 0
