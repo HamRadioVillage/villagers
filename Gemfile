@@ -7,7 +7,7 @@ gem "propshaft"
 # Database adapters for Active Record. The active one is selected at runtime via
 # the DATABASE_ADAPTER env var (see config/database.yml); both gems are bundled
 # so either PostgreSQL or MySQL/MariaDB can be used without changing the Gemfile.
-gem "pg", "~> 1.5"
+gem "pg", "~> 1.6"
 gem "mysql2", "~> 0.5"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"

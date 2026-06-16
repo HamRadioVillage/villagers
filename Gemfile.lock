@@ -85,7 +85,7 @@ GEM
     bindex (0.8.1)
     bootsnap (1.21.1)
       msgpack (~> 1.2)
-    brakeman (7.1.2)
+    brakeman (8.0.5)
       racc
     builder (3.3.0)
     bundler-audit (0.9.3)
@@ -463,8 +463,8 @@ DEPENDENCIES
   letter_opener
   mailgun-ruby (~> 1.2)
   minitest (~> 6.0)
+  pg (~> 1.6)
   mysql2 (~> 0.5)
-  pg (~> 1.5)
   propshaft
   puma (>= 5.0)
   pundit (~> 2.3)
