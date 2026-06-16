@@ -9,7 +9,7 @@
           <h2 class="h4 mb-0">Edit Profile</h2>
         </div>
         <div class="card-body">
-          <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put }, local: true) do |f| %>
+          <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put, data: { turbo: false } }) do |f| %>
             <%= render "devise/shared/error_messages", resource: resource %>
 
             <h5 class="mb-3">Account Information</h5>
@@ -133,7 +133,7 @@
           <h5 class="mb-3">Notification Preferences</h5>
           <div class="card border-info mb-4">
             <div class="card-body">
-              <%= form_with url: notification_preferences_path, method: :patch, local: true do |f| %>
+              <%= form_with url: notification_preferences_path, method: :patch, data: { turbo: false } do |f| %>
                 <div class="form-check mb-2">
                   <%= hidden_field_tag "user[notify_in_app]", "0" %>
                   <%= check_box_tag "user[notify_in_app]", "1", resource.notify_in_app?, class: "form-check-input", id: "notify_in_app" %>
