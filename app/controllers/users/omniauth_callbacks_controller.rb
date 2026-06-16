@@ -3,6 +3,17 @@ module Users
     # GET/POST /users/auth/villager_oauth/callback
     def villager_oauth
       auth = request.env["omniauth.auth"]
+      identity = OauthIdentity.new(auth)
+
+      # Authorization gate: only provision/sign in users whose roles claim
+      # satisfies OAUTH_ALLOWED_ROLES_REGEX (no-op when that isn't configured).
+      # Re-checked every login so revoked access at the IdP takes effect.
+      unless OauthAccessPolicy.permitted?(identity)
+        redirect_to new_user_session_path,
+                    alert: "Your account isn't authorized to access this village."
+        return
+      end
+
       @user = User.from_omniauth(auth)
 
       if @user.persisted?

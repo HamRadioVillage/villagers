@@ -37,12 +37,14 @@ OmniAuth.config.test_mode = true
 OmniAuth.config.logger = Rails.logger
 
 # Build a fake OmniAuth auth hash for the villager_oauth provider and register
-# it so the next request to the callback uses it. Pass overrides for uid/email/name.
-def stub_villager_oauth(uid: "oauth-uid-123", email: "oauth.user@example.com", name: "OAuth User")
+# it so the next request to the callback uses it. Pass overrides for
+# uid/email/name and the provider `roles` claim (carried in extra.raw_info).
+def stub_villager_oauth(uid: "oauth-uid-123", email: "oauth.user@example.com", name: "OAuth User", roles: [])
   auth = OmniAuth::AuthHash.new(
     provider: "villager_oauth",
     uid: uid,
-    info: { email: email, name: name }
+    info: { email: email, name: name },
+    extra: { raw_info: { "email" => email, "name" => name, "roles" => roles } }
   )
   OmniAuth.config.mock_auth[:villager_oauth] = auth
   Rails.application.env_config["omniauth.auth"] = auth

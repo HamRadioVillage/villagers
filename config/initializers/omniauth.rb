@@ -16,4 +16,31 @@ module VillagerOauthConfig
   def display_name
     ENV.fetch("OAUTH_PROVIDER_NAME", "SSO")
   end
+
+  # The userinfo claim holding the user's roles (a list of strings).
+  def roles_claim
+    ENV.fetch("OAUTH_ROLES_CLAIM", "roles")
+  end
+
+  # Optional access-control gate: a regular expression tested against each role
+  # string. When unset, OAuth sign-in is open to anyone the provider
+  # authenticates (the open-source default). When set, a user must have at least
+  # one role matching the pattern to sign in (see OauthAccessPolicy).
+  #
+  # Returns a compiled Regexp or nil. Raises RegexpError on a malformed pattern;
+  # this is exercised at boot below so a typo fails the deploy, not every login.
+  def allowed_roles_pattern
+    raw = ENV["OAUTH_ALLOWED_ROLES_REGEX"]
+    return nil if raw.nil? || raw.empty?
+
+    Regexp.new(raw)
+  end
+end
+
+# Validate the access-control regex at boot so a malformed pattern surfaces
+# immediately instead of failing closed on every login attempt.
+begin
+  VillagerOauthConfig.allowed_roles_pattern
+rescue RegexpError => e
+  raise "OAUTH_ALLOWED_ROLES_REGEX is not a valid regular expression: #{e.message}"
 end
