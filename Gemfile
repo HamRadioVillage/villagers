@@ -1,11 +1,14 @@
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 8.1.1"
+gem "rails", "~> 8.1.2"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
-# Use PostgreSQL as the database for Active Record
+# Database adapters for Active Record. The active one is selected at runtime via
+# the DATABASE_ADAPTER env var (see config/database.yml); both gems are bundled
+# so either PostgreSQL or MySQL/MariaDB can be used without changing the Gemfile.
 gem "pg", "~> 1.5"
+gem "mysql2", "~> 0.5"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
 # Bundle and transpile JavaScript [https://github.com/rails/jsbundling-rails]

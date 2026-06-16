@@ -1,4 +1,12 @@
 class ConferenceProgram < ApplicationRecord
+  # Force JSON (de)serialization for day_schedules so it behaves identically on
+  # every supported adapter. PostgreSQL and MySQL expose a native `json` type, but
+  # MariaDB reports the column as `longtext`, where ActiveRecord would otherwise
+  # store a hash via #to_s (invalid JSON) and trip MariaDB's implicit json_valid()
+  # CHECK constraint. Declaring the type here is a no-op on Postgres/MySQL and the
+  # fix for MariaDB.
+  attribute :day_schedules, :json
+
   belongs_to :conference
   belongs_to :program
   has_many :timeslots, dependent: :destroy
