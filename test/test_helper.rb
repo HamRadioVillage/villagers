@@ -6,11 +6,13 @@ ENV["OAUTH_CLIENT_ID"] ||= "test-oauth-client"
 ENV["OAUTH_CLIENT_SECRET"] ||= "test-oauth-secret"
 ENV["OAUTH_SITE"] ||= "https://oauth.test"
 
-# Pin self-registration to enabled (the app default) so the suite is
-# deterministic regardless of a developer's local .env. Set before the
-# environment boots; dotenv's non-overwriting load won't clobber it. Tests that
-# exercise the disabled state stub SelfRegistration.enabled? directly.
-ENV["SELF_REGISTRATION_ENABLED"] = "true"
+# Pin app-default values for flags a developer's local .env might override, so
+# the suite is deterministic regardless of .env. Set before the environment
+# boots; dotenv's non-overwriting load won't clobber these. Tests that exercise
+# the non-default behavior stub the relevant predicate directly.
+ENV["SELF_REGISTRATION_ENABLED"] = "true"   # self-registration on (app default)
+ENV["OAUTH_ROLES_CLAIM"] = "roles"          # default roles claim key
+ENV["OAUTH_ALLOWED_ROLES_REGEX"] = ""       # access gate off (empty => no pattern)
 
 require_relative "../config/environment"
 require "rails/test_help"
