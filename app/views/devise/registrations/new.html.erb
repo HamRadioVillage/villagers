@@ -6,6 +6,8 @@
           <h2 class="h4 mb-0 text-center">Sign up</h2>
         </div>
         <div class="card-body">
+          <%= render "devise/shared/oauth_links" %>
+
           <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { data: { turbo: false } }) do |f| %>
             <%= render "devise/shared/error_messages", resource: resource %>
 

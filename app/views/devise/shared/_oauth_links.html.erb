@@ -1,0 +1,14 @@
+<%# Renders a "Sign in with <provider>" button, only when OAuth is configured. %>
+<%# Uses button_to (POST) as required by omniauth-rails_csrf_protection. %>
+<% if VillagerOauthConfig.enabled? %>
+  <div class="d-flex justify-content-center mb-3">
+    <%= button_to user_villager_oauth_omniauth_authorize_path,
+                  method: :post,
+                  data: { turbo: false },
+                  class: "btn btn-outline-primary btn-lg" do %>
+      <i class="bi bi-box-arrow-in-right me-1"></i>
+      Sign in with <%= VillagerOauthConfig.display_name %>
+    <% end %>
+  </div>
+  <div class="text-center text-muted mb-3">or</div>
+<% end %>

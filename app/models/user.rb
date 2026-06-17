@@ -1,12 +1,43 @@
 class User < ApplicationRecord
   # Include default devise modules. Others available are:
-  # :lockable, :timeoutable, :trackable and :omniauthable
+  # :lockable, :timeoutable, :trackable
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable,
-         :confirmable
+         :confirmable, :omniauthable, omniauth_providers: [ :villager_oauth ]
 
   # Devise handles email validation, but we keep format validation
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
+
+  # Find or create a user from an OmniAuth callback.
+  # Resolution order: existing identity (provider + uid) -> existing account
+  # with the same email (linked) -> brand new just-in-time provisioned user.
+  # OAuth users are auto-confirmed since the provider vouches for the email.
+  def self.from_omniauth(auth)
+    # Only match an existing identity by a present uid. A blank uid identifies
+    # no one, so matching on it would collapse every blank-uid login onto the
+    # first such account (callers should reject blank uids before this).
+    if auth.uid.present?
+      identity = find_by(provider: auth.provider, uid: auth.uid)
+      return identity if identity
+    end
+
+    user = find_or_initialize_by(email: auth.info.email)
+    user.provider = auth.provider
+    user.uid = auth.uid
+    user.name ||= auth.info.name
+    user.password = Devise.friendly_token[0, 32] if user.encrypted_password.blank?
+    user.skip_confirmation! unless user.confirmed?
+    user.save
+    user
+  end
+
+  # OAuth-backed accounts authenticate through the provider, so they don't need
+  # a local password. Password-only accounts still require one (via :validatable).
+  def password_required?
+    return false if provider.present?
+
+    super
+  end
 
   # Skip email confirmation when email is disabled
   before_create :auto_confirm_if_email_disabled

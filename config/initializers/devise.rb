@@ -278,6 +278,19 @@ Devise.setup do |config|
   # Add a new OmniAuth provider. Check the wiki for more information on setting
   # up on your models and hooks.
   # config.omniauth :github, 'APP_ID', 'APP_SECRET', scope: 'user,public_repo'
+  #
+  # Custom OAuth2 provider, only registered when configured. The strategy
+  # (lib/omniauth/strategies/villager_oauth.rb) reads its endpoints/scope from
+  # ENV; here we just pass the client credentials. NB: this initializer loads
+  # before omniauth.rb (alphabetical), so the ENV check is inlined rather than
+  # using VillagerOauthConfig.
+  if ENV["OAUTH_CLIENT_ID"].present?
+    require Rails.root.join("lib/omniauth/strategies/villager_oauth")
+    config.omniauth :villager_oauth,
+                    ENV["OAUTH_CLIENT_ID"],
+                    ENV["OAUTH_CLIENT_SECRET"],
+                    scope: ENV.fetch("OAUTH_SCOPE", "shifts")
+  end
 
   # ==> Warden configuration
   # If you want to use other strategies, that are not supported by Devise, or

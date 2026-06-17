@@ -1,4 +1,19 @@
 ENV["RAILS_ENV"] ||= "test"
+
+# Dummy OAuth credentials so the OmniAuth provider/middleware is registered
+# under test. Combined with OmniAuth.config.test_mode, no real HTTP is made.
+ENV["OAUTH_CLIENT_ID"] ||= "test-oauth-client"
+ENV["OAUTH_CLIENT_SECRET"] ||= "test-oauth-secret"
+ENV["OAUTH_SITE"] ||= "https://oauth.test"
+
+# Pin app-default values for flags a developer's local .env might override, so
+# the suite is deterministic regardless of .env. Set before the environment
+# boots; dotenv's non-overwriting load won't clobber these. Tests that exercise
+# the non-default behavior stub the relevant predicate directly.
+ENV["SELF_REGISTRATION_ENABLED"] = "true"   # self-registration on (app default)
+ENV["OAUTH_ROLES_CLAIM"] = "roles"          # default roles claim key
+ENV["OAUTH_ALLOWED_ROLES_REGEX"] = ""       # access gate off (empty => no pattern)
+
 require_relative "../config/environment"
 require "rails/test_help"
 
@@ -15,8 +30,43 @@ module ActiveSupport
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
 
-    # Add more helper methods to be used by all tests here...
+    # Temporarily set environment variables for the duration of a block,
+    # restoring (or deleting) them afterward. Used to exercise config-driven
+    # behavior; minitest 6 dropped Minitest::Mock/#stub, and these flags read
+    # ENV live, so this is the clean way to flip them in tests.
+    #   with_env("SELF_REGISTRATION_ENABLED" => "false") { ... }
+    def with_env(vars)
+      originals = vars.keys.index_with { |key| ENV[key] }
+      vars.each { |key, value| value.nil? ? ENV.delete(key) : ENV[key] = value }
+      yield
+    ensure
+      originals.each { |key, value| value.nil? ? ENV.delete(key) : ENV[key] = value }
+    end
   end
+end
+
+# Run OmniAuth in test mode so no real HTTP requests are made to the provider.
+OmniAuth.config.test_mode = true
+OmniAuth.config.logger = Rails.logger
+
+# Build a fake OmniAuth auth hash for the villager_oauth provider and register
+# it so the next request to the callback uses it. Pass overrides for
+# uid/email/name and the provider `roles` claim (carried in extra.raw_info).
+def stub_villager_oauth(uid: "oauth-uid-123", email: "oauth.user@example.com", name: "OAuth User", roles: [])
+  auth = OmniAuth::AuthHash.new(
+    provider: "villager_oauth",
+    uid: uid,
+    info: { email: email, name: name },
+    extra: { raw_info: { "email" => email, "name" => name, "roles" => roles } }
+  )
+  OmniAuth.config.mock_auth[:villager_oauth] = auth
+  Rails.application.env_config["omniauth.auth"] = auth
+  auth
+end
+
+# Simulate a provider-side failure (e.g. user denied access, invalid token).
+def stub_villager_oauth_failure(reason = :invalid_credentials)
+  OmniAuth.config.mock_auth[:villager_oauth] = reason
 end
 
 # Include Devise test helpers
