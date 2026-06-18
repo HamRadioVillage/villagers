@@ -76,6 +76,22 @@ class ConferencePolicyTest < ActiveSupport::TestCase
     assert_not ConferencePolicy.new(@volunteer, @conference).update?
   end
 
+  test "village admin can assign conference leads" do
+    assert ConferencePolicy.new(@village_admin, @conference).assign_lead?
+  end
+
+  test "conference lead cannot assign conference leads" do
+    assert_not ConferencePolicy.new(@conference_lead, @conference).assign_lead?
+  end
+
+  test "conference admin cannot assign conference leads" do
+    assert_not ConferencePolicy.new(@conference_admin, @conference).assign_lead?
+  end
+
+  test "volunteer cannot assign conference leads" do
+    assert_not ConferencePolicy.new(@volunteer, @conference).assign_lead?
+  end
+
   test "village admin can destroy conferences" do
     assert ConferencePolicy.new(@village_admin, @conference).destroy?
   end

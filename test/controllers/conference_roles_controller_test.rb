@@ -78,6 +78,18 @@ class ConferenceRolesControllerTest < ActionDispatch::IntegrationTest
     assert @volunteer.conference_admin?(@conference)
   end
 
+  test "should not create conference lead role as conference lead" do
+    sign_in @conference_lead
+    assert_no_difference("ConferenceRole.count") do
+      post conference_conference_roles_url(@conference), params: {
+        user_id: @volunteer.id,
+        role_name: ConferenceRole::CONFERENCE_LEAD
+      }
+    end
+    assert_redirected_to root_path
+    assert_not @volunteer.conference_lead?(@conference)
+  end
+
   test "should not create role as regular volunteer" do
     sign_in @volunteer
     assert_no_difference("ConferenceRole.count") do
