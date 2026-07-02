@@ -44,8 +44,8 @@ class CustomProgramsControllerTest < ActionDispatch::IntegrationTest
 
   test "requires authentication for new" do
     get new_conference_custom_program_path(@conference)
-    # Pundit redirects to root_path when unauthorized
-    assert_redirected_to root_path
+    # Unauthenticated users are sent to sign in (issue #180)
+    assert_redirected_to new_user_session_path
   end
 
   test "conference lead can access new custom program form" do

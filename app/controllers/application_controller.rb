@@ -4,6 +4,13 @@ class ApplicationController < ActionController::Base
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
   allow_browser versions: :modern
 
+  # Require authentication everywhere by default. Public pages opt out with
+  # skip_before_action: the home page (RootController), the first-run setup
+  # wizard (SetupController), the health endpoint (HealthController), and all
+  # Devise controllers (sign in/up, password reset, confirmations, OAuth).
+  before_action :authenticate_user!
+  skip_before_action :authenticate_user!, if: :devise_controller?
+
   # Make Devise helpers available in all views
   before_action :configure_permitted_parameters, if: :devise_controller?
   before_action :load_past_unarchived_conferences
@@ -27,7 +34,11 @@ class ApplicationController < ActionController::Base
 
   def user_not_authorized
     flash[:alert] = "You are not authorized to perform this action."
-    redirect_to(request.referer || root_path)
+    if user_signed_in?
+      redirect_to(request.referer || root_path)
+    else
+      redirect_to new_user_session_path
+    end
   end
 
   def load_past_unarchived_conferences
