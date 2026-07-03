@@ -133,6 +133,62 @@ class ScheduleTest < ApplicationSystemTestCase
     assert_text (Date.today + 1.day).strftime("%A, %B %d")
   end
 
+  test "long qualification-required pill wraps within the program column" do
+    qualification = Qualification.create!(
+      village: @village,
+      name: "Amateur Radio Extra Class License with Vanity Callsign Endorsement",
+      description: "A qualification with a deliberately long name"
+    )
+    @program.qualifications << qualification
+
+    login_as @volunteer
+    visit conference_schedule_path(@conference)
+
+    pill = find(".qualification-pill", match: :first)
+    assert_match(/qualification required/, pill.text)
+
+    # The pill must allow its text to wrap and long words to break so it
+    # stays within the fixed-width program column instead of overflowing.
+    assert_equal "normal", pill.native.css_value("white-space")
+    assert_equal "break-word", pill.native.css_value("word-break")
+
+    # The rendered pill should not be wider than its containing program column.
+    column = find(".program-column", match: :first)
+    assert pill.native.size.width <= column.native.size.width,
+           "Qualification pill (#{pill.native.size.width}px) overflowed the program column (#{column.native.size.width}px)"
+  end
+
+  test "hides program column on days with no timeslots" do
+    login_as @volunteer
+    visit conference_schedule_path(@conference)
+
+    # Program is enabled only on day 0, so day 1's card shows the program header
+    # while day 2's card omits it and shows the empty-day fallback.
+    day_one = find(".card", text: Date.today.strftime("%A, %B %d"))
+    assert day_one.has_selector?("th.program-column", text: @program.name)
+
+    day_two = find(".card", text: (Date.today + 1.day).strftime("%A, %B %d"))
+    assert_not day_two.has_selector?("th.program-column", text: @program.name)
+    assert day_two.has_text?("No programs scheduled")
+  end
+
+  test "schedule header row is sticky" do
+    login_as @volunteer
+    visit conference_schedule_path(@conference)
+
+    # The program-name header cells should use position: sticky so they stay
+    # pinned to the top of the viewport while scrolling a day's table.
+    position = page.evaluate_script(
+      "getComputedStyle(document.querySelector('.schedule-table thead th')).position"
+    )
+    assert_equal "sticky", position
+
+    top = page.evaluate_script(
+      "getComputedStyle(document.querySelector('.schedule-table thead th')).top"
+    )
+    assert_equal "0px", top
+  end
+
   test "schedule has signup buttons with modal trigger" do
     login_as @volunteer
     visit conference_schedule_path(@conference)

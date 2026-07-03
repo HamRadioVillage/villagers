@@ -7,6 +7,7 @@ class Conference < ApplicationRecord
   has_many :timeslots, through: :conference_programs
   has_many :conference_qualifications, dependent: :destroy
   has_many :qualification_removals, dependent: :destroy
+  has_many :qualification_assignment_delegations, dependent: :destroy
 
   validates :name, presence: true
   validates :start_date, presence: true
@@ -127,6 +128,12 @@ class Conference < ApplicationRecord
   # Uses conference-specific value if set, otherwise falls back to village default
   def effective_reminder_hours
     reminder_hours_before || village.reminder_hours_before || 24
+  end
+
+  # Returns the effective minimum shift duration (in minutes) for this conference
+  # Uses conference-specific value if set, otherwise falls back to 15 minutes
+  def effective_minimum_shift_duration
+    minimum_shift_duration || 15
   end
 
   private

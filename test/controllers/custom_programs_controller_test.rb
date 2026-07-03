@@ -44,8 +44,8 @@ class CustomProgramsControllerTest < ActionDispatch::IntegrationTest
 
   test "requires authentication for new" do
     get new_conference_custom_program_path(@conference)
-    # Pundit redirects to root_path when unauthorized
-    assert_redirected_to root_path
+    # Unauthenticated users are sent to sign in (issue #180)
+    assert_redirected_to new_user_session_path
   end
 
   test "conference lead can access new custom program form" do
@@ -151,5 +151,30 @@ class CustomProgramsControllerTest < ActionDispatch::IntegrationTest
     program = Program.last
     assert_equal @conference, program.conference
     assert_redirected_to conference_conference_programs_path(@conference)
+  end
+
+  test "can create a custom program whose name matches a village-wide program (issue #189)" do
+    Program.create!(name: "Shared Name", village: @village, max_volunteers: 2)
+    sign_in @conference_lead
+    assert_difference("Program.count", 1) do
+      post conference_custom_programs_path(@conference), params: {
+        program: { name: "Shared Name", max_volunteers: 2 }
+      }
+    end
+    created = Program.find_by(name: "Shared Name", conference: @conference)
+    assert created.present?
+    assert created.conference_specific?
+    assert_redirected_to conference_conference_programs_path(@conference)
+  end
+
+  test "duplicate name within the same conference re-renders the form instead of 500ing" do
+    Program.create!(name: "Dup In Conf", village: @village, conference: @conference, max_volunteers: 2)
+    sign_in @conference_lead
+    assert_no_difference("Program.count") do
+      post conference_custom_programs_path(@conference), params: {
+        program: { name: "Dup In Conf", max_volunteers: 2 }
+      }
+    end
+    assert_response :unprocessable_entity
   end
 end

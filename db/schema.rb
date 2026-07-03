@@ -10,9 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_15_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_03_171842) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "conference_program_roles", force: :cascade do |t|
+    t.bigint "conference_program_id", null: false
+    t.datetime "created_at", null: false
+    t.string "role_name", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["conference_program_id"], name: "index_conference_program_roles_on_conference_program_id"
+    t.index ["user_id", "conference_program_id", "role_name"], name: "index_conference_program_roles_unique", unique: true
+    t.index ["user_id"], name: "index_conference_program_roles_on_user_id"
+  end
 
   create_table "conference_programs", force: :cascade do |t|
     t.bigint "conference_id", null: false
@@ -66,6 +77,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_15_120000) do
     t.string "country", default: "US"
     t.datetime "created_at", null: false
     t.date "end_date"
+    t.integer "minimum_shift_duration"
     t.string "name"
     t.integer "reminder_hours_before"
     t.date "start_date"
@@ -117,8 +129,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_15_120000) do
     t.datetime "updated_at", null: false
     t.bigint "village_id", null: false
     t.index ["conference_id"], name: "index_programs_on_conference_id"
-    t.index ["village_id", "name"], name: "index_programs_on_village_id_and_name", unique: true
+    t.index ["village_id", "conference_id", "name"], name: "index_programs_on_village_id_and_conference_id_and_name", unique: true
     t.index ["village_id"], name: "index_programs_on_village_id"
+  end
+
+  create_table "qualification_assignment_delegations", force: :cascade do |t|
+    t.bigint "conference_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "qualification_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["conference_id"], name: "index_qualification_assignment_delegations_on_conference_id"
+    t.index ["qualification_id"], name: "index_qualification_assignment_delegations_on_qualification_id"
+    t.index ["user_id", "qualification_id", "conference_id"], name: "index_qualification_delegations_unique", unique: true
+    t.index ["user_id"], name: "index_qualification_assignment_delegations_on_user_id"
   end
 
   create_table "qualification_removals", force: :cascade do |t|
@@ -234,6 +258,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_15_120000) do
     t.index ["user_id"], name: "index_volunteer_signups_on_user_id"
   end
 
+  add_foreign_key "conference_program_roles", "conference_programs"
+  add_foreign_key "conference_program_roles", "users"
   add_foreign_key "conference_programs", "conferences"
   add_foreign_key "conference_programs", "programs"
   add_foreign_key "conference_qualifications", "conferences"
@@ -249,6 +275,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_15_120000) do
   add_foreign_key "program_roles", "users"
   add_foreign_key "programs", "conferences"
   add_foreign_key "programs", "villages"
+  add_foreign_key "qualification_assignment_delegations", "conferences"
+  add_foreign_key "qualification_assignment_delegations", "qualifications"
+  add_foreign_key "qualification_assignment_delegations", "users"
   add_foreign_key "qualification_removals", "conferences"
   add_foreign_key "qualification_removals", "qualifications"
   add_foreign_key "qualification_removals", "users"

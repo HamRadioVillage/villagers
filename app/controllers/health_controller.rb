@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class HealthController < ApplicationController
+  # Hit by load balancers / uptime monitors, not humans — must stay public.
+  skip_before_action :authenticate_user!
   skip_before_action :load_past_unarchived_conferences
 
   def show

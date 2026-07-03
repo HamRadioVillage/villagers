@@ -38,7 +38,9 @@ Rails.application.routes.draw do
     get "dashboard", to: "conference_dashboard#show", as: :dashboard
     get "calendar_export", to: "calendar_exports#show", as: :calendar_export
     get "programs/new", to: "conference_programs#new", as: :new_conference_program
-    resources :conference_programs, except: [ :new ], path: "programs"
+    resources :conference_programs, except: [ :new ], path: "programs" do
+      resources :conference_program_roles, only: [ :create, :destroy ]
+    end
     resources :custom_programs, only: [ :new, :create, :edit, :update, :destroy ]
     resources :conference_roles, only: [ :create, :destroy ]
     get "schedule", to: "schedule#show", as: :schedule
@@ -65,6 +67,10 @@ Rails.application.routes.draw do
     resources :conference_qualifications, path: "qualifications"
     resources :conference_user_qualifications, only: [ :create, :destroy ]
     resources :qualification_removals, only: [ :index, :create, :destroy ]
+    # Delegate the right to assign a qualification (managed by conference leads/admins)
+    resources :qualification_delegations, only: [ :index, :create, :destroy ]
+    # Assign qualifications to users (open to conference managers and delegates)
+    resources :qualification_grants, only: [ :index, :create, :destroy ]
   end
 
   # Program management

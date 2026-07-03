@@ -49,6 +49,26 @@ class ConferencesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "conference show lists activities the current user leads with a manage link" do
+    program = Program.create!(name: "Foo Barring", village: @village)
+    cp = ConferenceProgram.create!(conference: @conference, program: program)
+    ConferenceProgramRole.create!(user: @volunteer, conference_program: cp, role_name: ConferenceProgramRole::ACTIVITY_LEAD)
+
+    sign_in @volunteer
+    get conference_url(@conference)
+    assert_match(/Activities You Lead/, response.body)
+    assert_select "a[href=?]", conference_conference_program_path(@conference, cp), text: "Manage"
+  end
+
+  test "conference show hides the activities-you-lead section for non-leads" do
+    program = Program.create!(name: "Foo Barring", village: @village)
+    ConferenceProgram.create!(conference: @conference, program: program)
+
+    sign_in @volunteer
+    get conference_url(@conference)
+    assert_no_match(/Activities You Lead/, response.body)
+  end
+
   test "should get new as village admin" do
     sign_in @village_admin
     get new_conference_url
@@ -141,6 +161,34 @@ class ConferencesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "San Francisco", @conference.city
     assert_equal "CA", @conference.state
     assert_equal "US", @conference.country
+  end
+
+  test "should permit and persist minimum_shift_duration on create" do
+    sign_in @village_admin
+    assert_difference("Conference.count") do
+      post conferences_url, params: {
+        conference: {
+          name: "Min Duration Conference",
+          start_date: Date.today,
+          end_date: Date.tomorrow,
+          minimum_shift_duration: 30
+        }
+      }
+    end
+    assert_equal 30, Conference.last.minimum_shift_duration
+  end
+
+  test "should permit and persist minimum_shift_duration on update" do
+    sign_in @village_admin
+    patch conference_url(@conference), params: {
+      conference: {
+        name: @conference.name,
+        minimum_shift_duration: 60
+      }
+    }
+    assert_redirected_to @conference
+    @conference.reload
+    assert_equal 60, @conference.minimum_shift_duration
   end
 
   test "should update conference lead" do

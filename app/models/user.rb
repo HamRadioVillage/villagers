@@ -65,12 +65,14 @@ class User < ApplicationRecord
   has_many :roles, through: :user_roles
   has_many :conference_roles, dependent: :destroy
   has_many :program_roles, dependent: :destroy
+  has_many :conference_program_roles, dependent: :destroy
   # Qualification associations
   has_many :user_qualifications, dependent: :destroy
   has_many :qualifications, through: :user_qualifications
   has_many :conference_user_qualifications, dependent: :destroy
   has_many :conference_qualifications, through: :conference_user_qualifications
   has_many :qualification_removals, dependent: :destroy
+  has_many :qualification_assignment_delegations, dependent: :destroy
   # Volunteer signup associations
   has_many :volunteer_signups, dependent: :destroy
   has_many :timeslots, through: :volunteer_signups
@@ -116,6 +118,26 @@ class User < ApplicationRecord
     Program.joins(:program_roles).where(program_roles: { user_id: id, role_name: ProgramRole::PROGRAM_LEAD })
   end
 
+  def activity_lead?(conference_program)
+    conference_program_roles.exists?(
+      conference_program: conference_program,
+      role_name: ConferenceProgramRole::ACTIVITY_LEAD
+    )
+  end
+
+  def can_manage_conference_program?(conference_program)
+    can_manage_conference?(conference_program.conference) || activity_lead?(conference_program)
+  end
+
+  # The activities (conference programs) this user leads within a conference.
+  def led_conference_programs(conference)
+    conference.conference_programs
+              .joins(:conference_program_roles)
+              .where(conference_program_roles: { user_id: id, role_name: ConferenceProgramRole::ACTIVITY_LEAD })
+              .includes(:program)
+              .order("programs.name")
+  end
+
   def volunteer?
     # Any registered user is a volunteer
     persisted?
@@ -155,6 +177,24 @@ class User < ApplicationRecord
   def effective_qualification_for_conference?(qualification, conference)
     return false unless has_qualification?(qualification)
     !qualification_removed_for_conference?(qualification, conference)
+  end
+
+  # Qualification-assignment delegation (issue #186). A conference manager can
+  # always assign any qualification; a delegate may assign only the specific
+  # qualifications delegated to them within that conference.
+  def can_assign_qualification?(qualification, conference)
+    return true if can_manage_conference?(conference)
+
+    qualification_assignment_delegations.exists?(qualification: qualification, conference: conference)
+  end
+
+  # Qualifications this user is allowed to assign within the given conference.
+  def assignable_qualifications(conference)
+    return conference.village.qualifications.order(:name) if can_manage_conference?(conference)
+
+    Qualification.where(
+      id: qualification_assignment_delegations.where(conference: conference).select(:qualification_id)
+    ).order(:name)
   end
 
   # Volunteer statistics methods

@@ -19,6 +19,13 @@ class ConferencePolicy < ApplicationPolicy
     user&.village_admin?
   end
 
+  def assign_lead?
+    # Only village admins can appoint or change conference leads.
+    # Conference leads/admins can delegate admins (see ConferenceRolesController),
+    # but not promote other leads.
+    user&.village_admin?
+  end
+
   def archive?
     # Village admins can archive any conference
     # Conference leads can archive their assigned conferences

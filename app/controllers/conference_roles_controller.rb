@@ -5,10 +5,10 @@ class ConferenceRolesController < ApplicationController
     @user = User.find(params[:user_id])
     role_name = params[:role_name] || ConferenceRole::CONFERENCE_ADMIN
 
-    # Only conference leads and village admins can delegate admins
-    # Only village admins can change leads
+    # Only village admins can appoint conference leads.
+    # Conference leads and village admins can delegate conference admins.
     if role_name == ConferenceRole::CONFERENCE_LEAD
-      authorize @conference, :update?, policy_class: ConferencePolicy
+      authorize @conference, :assign_lead?, policy_class: ConferencePolicy
     else
       authorize @conference, :update?, policy_class: ConferencePolicy
     end

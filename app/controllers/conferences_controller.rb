@@ -20,6 +20,7 @@ class ConferencesController < ApplicationController
   def show
     authorize @conference, :show?, policy_class: ConferencePolicy
     @conference_roles = @conference.conference_roles.includes(:user)
+    @led_conference_programs = current_user.led_conference_programs(@conference)
   end
 
   def new
@@ -134,6 +135,6 @@ class ConferencesController < ApplicationController
   end
 
   def conference_params
-    params.require(:conference).permit(:name, :country, :state, :city, :start_date, :end_date, :conference_hours_start, :conference_hours_end, :reminder_hours_before)
+    params.require(:conference).permit(:name, :country, :state, :city, :start_date, :end_date, :conference_hours_start, :conference_hours_end, :reminder_hours_before, :minimum_shift_duration)
   end
 end

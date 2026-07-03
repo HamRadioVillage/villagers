@@ -1,4 +1,7 @@
 class RootController < ApplicationController
+  # The home page is public; it shows a dashboard only when signed in.
+  skip_before_action :authenticate_user!
+
   def show
     if Village.setup_complete?
       @village = Village.first
