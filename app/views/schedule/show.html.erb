@@ -21,8 +21,10 @@
     </div>
   </div>
 
-  <% @schedule_data.each do |date, day_data| %>
-    <div class="card mb-4">
+  <% @schedule_data.each_with_index do |(date, day_data), day_index| %>
+    <div id="schedule-day-<%= day_index %>" class="schedule-day">
+    <%# ===================== Wide table (desktop / tablet) ===================== %>
+    <div class="card mb-4 d-none d-md-block">
       <div class="card-header bg-primary text-white">
         <h3 class="h5 mb-0"><%= date.strftime("%A, %B %d, %Y") %></h3>
       </div>
@@ -48,59 +50,25 @@
                   </td>
                   <% day_data[:programs].each do |program_id, program_data| %>
                     <% slot_data = program_data[:timeslots][time_slot] %>
-                    <%
-                      cell_class = "schedule-cell"
-                      # Check qualification requirements for this program
-                      program_quals = @program_qualifications[program_id] || []
-                      missing_quals = program_quals.reject { |q| @user_qualification_ids.include?(q.id) }
-                      user_lacks_qualifications = missing_quals.any?
-
-                      if slot_data
-                        is_user_signed_up = @user_signups.include?(slot_data[:timeslot].id)
-                        if user_lacks_qualifications && !is_user_signed_up
-                          cell_class += " slot-unqualified"
-                        elsif is_user_signed_up
-                          cell_class += " user-signed-up"
-                        elsif slot_data[:full]
-                          cell_class += " slot-full"
-                        elsif slot_data[:signed_up_count] == 0
-                          cell_class += " slot-empty"
-                        else
-                          cell_class += " slot-partial"
-                        end
-                      end
-                    %>
-                    <td class="<%= cell_class %>">
+                    <% status = slot_status(slot_data, program_id, program_qualifications: @program_qualifications, user_qualification_ids: @user_qualification_ids, user_signups: @user_signups) %>
+                    <td class="<%= ["schedule-cell", status&.css_modifier].compact.join(" ") %>">
                       <% if slot_data %>
-                        <% is_user_signed_up = @user_signups.include?(slot_data[:timeslot].id) %>
                         <div class="schedule-slot d-flex flex-column h-100">
                           <%# Status bar - always at top %>
                           <div class="slot-status d-flex align-items-center justify-content-between flex-wrap gap-1">
                             <div class="d-flex align-items-center flex-wrap gap-1">
-                              <% if is_user_signed_up %>
-                                <span class="badge bg-primary">You're signed up</span>
-                              <% elsif user_lacks_qualifications %>
-                                <% missing_quals.each do |qual| %>
-                                  <span class="badge bg-secondary qualification-pill"><%= qual.name %> qualification required</span>
-                                <% end %>
-                              <% elsif slot_data[:full] %>
-                                <span class="badge bg-success">Full</span>
-                              <% elsif slot_data[:signed_up_count] == 0 %>
-                                <span class="badge bg-danger">Needs Staff</span>
-                              <% else %>
-                                <span class="badge bg-warning text-dark"><%= slot_data[:signed_up_count] %> of <%= slot_data[:max_volunteers] %></span>
-                              <% end %>
+                              <%= render "schedule/slot_status_badge", status: status, slot_data: slot_data %>
                               <small class="text-muted ms-1">
                                 <%= slot_data[:signed_up_count] %>/<%= slot_data[:max_volunteers] %>
                               </small>
                             </div>
                             <div class="slot-actions">
-                              <% if is_user_signed_up %>
+                              <% if status.signed_up? %>
                                 <%= link_to "Cancel",
                                     conference_volunteer_signup_path(@conference, current_user.volunteer_signups.find_by(timeslot: slot_data[:timeslot])),
                                     data: { turbo_method: :delete, turbo_confirm: "Cancel this shift?" },
                                     class: "btn btn-sm btn-outline-danger" %>
-                              <% elsif !slot_data[:full] && !user_lacks_qualifications %>
+                              <% elsif status.signable? %>
                                 <button type="button"
                                         class="btn btn-sm btn-primary"
                                         data-action="shift-signup#openModal"
@@ -183,6 +151,80 @@
         </div>
       </div>
     </div>
+
+    <%# ===================== Collapsed single column (mobile) ===================== %>
+    <div class="card mb-4 d-md-none schedule-collapsed">
+      <div class="card-header bg-primary text-white">
+        <h3 class="h5 mb-0"><%= date.strftime("%A, %B %d, %Y") %></h3>
+      </div>
+      <div class="card-body p-0">
+        <% if day_data[:programs].empty? %>
+          <p class="text-muted text-center my-3 mb-0">No programs scheduled</p>
+        <% else %>
+          <ul class="list-group list-group-flush">
+            <% day_data[:time_slots].each do |time_slot| %>
+              <%
+                slots_here = day_data[:programs].filter_map do |program_id, program_data|
+                  sd = program_data[:timeslots][time_slot]
+                  next unless sd
+
+                  status = slot_status(sd, program_id, program_qualifications: @program_qualifications, user_qualification_ids: @user_qualification_ids, user_signups: @user_signups)
+                  [ program_data[:name], sd, status ]
+                end
+              %>
+              <% next if slots_here.empty? %>
+              <li class="list-group-item collapsed-slot">
+                <div class="fw-bold mb-2">
+                  <%= Time.zone.parse("2000-01-01 #{time_slot}").strftime("%l:%M %p").strip %>
+                </div>
+
+                <% signable_programs = [] %>
+                <% slots_here.each do |program_name, sd, status| %>
+                  <% signable_programs << { name: program_name, timeslotId: sd[:timeslot].id } if status.signable? %>
+                  <div class="d-flex justify-content-between align-items-start gap-2 mb-2 collapsed-program">
+                    <div>
+                      <div class="fw-semibold small"><%= program_name %></div>
+                      <div class="d-flex align-items-center flex-wrap gap-1 mt-1">
+                        <%= render "schedule/slot_status_badge", status: status, slot_data: sd %>
+                        <small class="text-muted"><%= sd[:signed_up_count] %>/<%= sd[:max_volunteers] %></small>
+                      </div>
+                    </div>
+                    <% if status.signed_up? %>
+                      <%= link_to "Cancel",
+                          conference_volunteer_signup_path(@conference, current_user.volunteer_signups.find_by(timeslot: sd[:timeslot])),
+                          data: { turbo_method: :delete, turbo_confirm: "Cancel this shift?" },
+                          class: "btn btn-sm btn-outline-danger flex-shrink-0" %>
+                    <% end %>
+                  </div>
+                <% end %>
+
+                <% if signable_programs.any? %>
+                  <%= button_tag "Sign Up",
+                      type: "button",
+                      class: "btn btn-sm btn-primary w-100 mt-1",
+                      data: { action: "shift-signup#openModal", programs: signable_programs.to_json } %>
+                <% end %>
+              </li>
+            <% end %>
+          </ul>
+        <% end %>
+      </div>
+    </div>
+    </div>
+  <% end %>
+
+  <% if @schedule_data.size > 1 %>
+    <div class="schedule-day-nav-spacer"></div>
+    <nav class="schedule-day-nav" aria-label="Jump to day">
+      <div class="schedule-day-nav-inner">
+        <span class="schedule-day-nav-label text-muted">Jump to:</span>
+        <% @schedule_data.each_with_index do |(date, _day_data), day_index| %>
+          <a href="#schedule-day-<%= day_index %>" class="btn btn-sm btn-outline-primary">
+            <%= date.strftime("%a, %b ") + date.day.to_s %>
+          </a>
+        <% end %>
+      </div>
+    </nav>
   <% end %>
 
   <!-- Shift Signup Modal -->
@@ -194,31 +236,40 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label fw-bold">Program</label>
-            <p class="mb-0" data-shift-signup-target="programName">-</p>
+          <%# Step 1: pick which shift type (only shown when a time slot has several signable programs) %>
+          <div class="d-none" data-shift-signup-target="programStep">
+            <label class="form-label fw-bold">Which shift type?</label>
+            <div data-shift-signup-target="programChoices"></div>
           </div>
 
-          <div class="mb-3">
-            <label class="form-label fw-bold">Start Time</label>
-            <p class="mb-0" data-shift-signup-target="startTime">-</p>
-          </div>
+          <%# Step 2: pick the duration for the chosen program %>
+          <div data-shift-signup-target="mainStep">
+            <div class="mb-3">
+              <label class="form-label fw-bold">Program</label>
+              <p class="mb-0" data-shift-signup-target="programName">-</p>
+            </div>
 
-          <div class="mb-3">
-            <label for="shiftDuration" class="form-label fw-bold">How long would you like to volunteer?</label>
-            <select id="shiftDuration" class="form-select" data-shift-signup-target="endTimeSelect" data-action="change->shift-signup#selectionChanged">
-              <option>Loading options...</option>
-            </select>
-            <div class="form-text d-none" data-shift-signup-target="minimumNote"></div>
-          </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Start Time</label>
+              <p class="mb-0" data-shift-signup-target="startTime">-</p>
+            </div>
 
-          <div class="alert alert-danger d-none" data-shift-signup-target="error"></div>
+            <div class="mb-3">
+              <label for="shiftDuration" class="form-label fw-bold">How long would you like to volunteer?</label>
+              <select id="shiftDuration" class="form-select" data-shift-signup-target="endTimeSelect" data-action="change->shift-signup#selectionChanged">
+                <option>Loading options...</option>
+              </select>
+              <div class="form-text d-none" data-shift-signup-target="minimumNote"></div>
+            </div>
 
-          <div class="alert alert-info mb-0">
-            <small>
-              <strong>Total commitment:</strong>
-              <span data-shift-signup-target="durationDisplay">-</span>
-            </small>
+            <div class="alert alert-danger d-none" data-shift-signup-target="error"></div>
+
+            <div class="alert alert-info mb-0">
+              <small>
+                <strong>Total commitment:</strong>
+                <span data-shift-signup-target="durationDisplay">-</span>
+              </small>
+            </div>
           </div>
         </div>
         <div class="modal-footer">

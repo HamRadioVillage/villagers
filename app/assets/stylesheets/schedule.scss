@@ -122,3 +122,45 @@
     padding: 0.2rem 0.4rem;
   }
 }
+
+// Collapsed mobile view: a coloured left border echoes the table cell status.
+.schedule-collapsed .collapsed-program {
+  border-left: 4px solid transparent;
+  padding-left: 0.5rem;
+}
+
+// Jump-to-day anchor: offset so the day heading isn't flush to the viewport top.
+.schedule-day {
+  scroll-margin-top: 1rem;
+}
+
+// Fixed bottom bar with a jump button per day.
+.schedule-day-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1030;
+  background-color: #fff;
+  border-top: 1px solid #dee2e6;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+  padding: 0.5rem 0.75rem;
+  overflow-x: auto;
+}
+
+.schedule-day-nav-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.schedule-day-nav-label {
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+// Reserve space so the fixed bar never covers the last row of content.
+.schedule-day-nav-spacer {
+  height: 4rem;
+}
