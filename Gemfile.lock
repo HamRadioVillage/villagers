@@ -279,7 +279,7 @@ GEM
     omniauth-oauth2 (1.9.0)
       oauth2 (>= 2.0.2, < 3)
       omniauth (~> 2.0)
-    omniauth-rails_csrf_protection (1.0.2)
+    omniauth-rails_csrf_protection (2.0.1)
       actionpack (>= 4.2)
       omniauth (~> 2.0)
     orm_adapter (0.5.0)
@@ -503,7 +503,7 @@ DEPENDENCIES
   minitest (~> 6.0)
   mysql2 (~> 0.5)
   omniauth-oauth2 (~> 1.8)
-  omniauth-rails_csrf_protection (~> 1.0)
+  omniauth-rails_csrf_protection (~> 2.0)
   pg (~> 1.6)
   propshaft
   puma (>= 5.0)
