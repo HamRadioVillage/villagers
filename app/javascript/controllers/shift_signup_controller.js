@@ -3,7 +3,7 @@ import * as bootstrap from "bootstrap"
 
 // Connects to data-controller="shift-signup"
 export default class extends Controller {
-  static targets = ["modal", "startTime", "endTimeSelect", "durationDisplay", "submitBtn", "programName", "loading"]
+  static targets = ["modal", "startTime", "endTimeSelect", "durationDisplay", "submitBtn", "programName", "loading", "programStep", "programChoices", "mainStep"]
   static values = {
     availableTimeslotsUrl: String,
     bulkCreateUrl: String,
@@ -11,7 +11,9 @@ export default class extends Controller {
   }
 
   connect() {
-    // Controller connected
+    // Signal readiness so tests (and any external triggers) can wait for the
+    // controller to be connected before interacting.
+    this.element.dataset.shiftSignupReady = "true"
   }
 
   getModal() {
@@ -25,8 +27,60 @@ export default class extends Controller {
     event.preventDefault()
 
     const button = event.currentTarget
-    this.timeslotIdValue = button.dataset.timeslotId
 
+    // Collapsed mobile view: the button lists the programs signable at this time.
+    // The wide table button instead carries a single data-timeslot-id.
+    const programsJson = button.dataset.programs
+    if (programsJson) {
+      const programs = JSON.parse(programsJson)
+      if (programs.length > 1) {
+        this.showProgramPicker(programs)
+        return
+      }
+      this.timeslotIdValue = programs[0].timeslotId
+    } else {
+      this.timeslotIdValue = button.dataset.timeslotId
+    }
+
+    this.showDurationStep()
+    // Open the modal immediately (with a loading state) so it never depends on
+    // the fetch resolving; durations populate when the request returns.
+    this.getModal().show()
+    await this.loadDurations()
+  }
+
+  // Step 1 (collapsed view only): let the volunteer choose which shift type.
+  showProgramPicker(programs) {
+    this.programChoicesTarget.innerHTML = ""
+
+    programs.forEach(program => {
+      const choice = document.createElement("button")
+      choice.type = "button"
+      choice.className = "btn btn-outline-primary w-100 mb-2 text-start"
+      choice.textContent = program.name
+      choice.addEventListener("click", () => this.selectProgram(program))
+      this.programChoicesTarget.appendChild(choice)
+    })
+
+    this.programStepTarget.classList.remove("d-none")
+    this.mainStepTarget.classList.add("d-none")
+    this.submitBtnTarget.classList.add("d-none")
+    this.getModal().show()
+  }
+
+  async selectProgram(program) {
+    this.timeslotIdValue = program.timeslotId
+    this.showDurationStep()
+    await this.loadDurations()
+  }
+
+  showDurationStep() {
+    this.programStepTarget.classList.add("d-none")
+    this.mainStepTarget.classList.remove("d-none")
+    this.submitBtnTarget.classList.remove("d-none")
+  }
+
+  async loadDurations() {
     // Show loading state
     this.loadingTarget.classList.remove("d-none")
     this.submitBtnTarget.disabled = true
@@ -44,7 +98,6 @@ export default class extends Controller {
 
       const data = await response.json()
       this.populateModal(data)
-      this.getModal().show()
     } catch (error) {
       console.error("Error loading timeslot data:", error)
       alert("Failed to load shift options. Please try again.")
@@ -186,11 +239,13 @@ export default class extends Controller {
     }
 
     try {
+      const headers = {}
+      const csrfToken = document.querySelector("[name='csrf-token']")
+      if (csrfToken) headers["X-CSRF-Token"] = csrfToken.content
+
       const response = await fetch(this.bulkCreateUrlValue, {
         method: "POST",
-        headers: {
-          "X-CSRF-Token": document.querySelector("[name='csrf-token']").content
-        },
+        headers,
         body: formData
       })
 

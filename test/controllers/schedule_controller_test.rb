@@ -257,6 +257,62 @@ class ScheduleControllerTest < ActionDispatch::IntegrationTest
     assert_match "Cert B qualification required", response.body
   end
 
+  # --- Collapsed mobile view (issue #187) ---
+
+  test "renders both the wide table and the collapsed mobile view" do
+    Timeslot.create!(
+      conference_program: @conference_program,
+      start_time: @conference.start_date.to_datetime + 9.hours,
+      max_volunteers: 2,
+      current_volunteers_count: 0
+    )
+
+    sign_in @volunteer
+    get conference_schedule_url(@conference)
+    assert_response :success
+    assert_match "schedule-table", response.body
+    assert_match "schedule-collapsed", response.body
+  end
+
+  test "collapsed view sign up button carries signable programs payload" do
+    timeslot = Timeslot.create!(
+      conference_program: @conference_program,
+      start_time: @conference.start_date.to_datetime + 9.hours,
+      max_volunteers: 2,
+      current_volunteers_count: 0
+    )
+
+    sign_in @volunteer
+    get conference_schedule_url(@conference)
+    assert_response :success
+    # The collapsed "Sign Up" button advertises which programs can be signed up
+    # for at this time slot via a data-programs attribute.
+    assert_match "data-programs", response.body
+    assert_match @program.name, response.body
+    assert_match timeslot.id.to_s, response.body
+  end
+
+  test "collapsed view omits signable programs payload when user is unqualified" do
+    qualification = Qualification.create!(
+      name: "Test Cert",
+      description: "A test certification",
+      village: @village
+    )
+    ProgramQualification.create!(program: @program, qualification: qualification)
+    Timeslot.create!(
+      conference_program: @conference_program,
+      start_time: @conference.start_date.to_datetime + 9.hours,
+      max_volunteers: 2,
+      current_volunteers_count: 0
+    )
+
+    sign_in @volunteer
+    get conference_schedule_url(@conference)
+    assert_response :success
+    # No signable program at this time -> no sign up button / payload
+    assert_no_match(/data-programs/, response.body)
+  end
+
   test "schedule shows qualified state when user has all required qualifications" do
     qual1 = Qualification.create!(
       name: "Cert A",
