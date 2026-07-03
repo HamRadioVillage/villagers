@@ -48,6 +48,19 @@
             </div>
 
             <div class="mb-3">
+              <%= form.label :minimum_shift_duration, "Shift Block Size", class: "form-label" %>
+              <%= form.select :minimum_shift_duration,
+                  options_for_select([ [ "15 minutes", 15 ], [ "30 minutes", 30 ], [ "45 minutes", 45 ], [ "1 hour", 60 ], [ "2 hours", 120 ] ], @conference.minimum_shift_duration),
+                  { include_blank: "15 minutes (default)" },
+                  { class: "form-select" } %>
+              <div class="form-text">
+                Volunteers book shifts in whole blocks of this length
+                (e.g. 30-minute blocks allow 30, 60, 90&hellip; but not 45).
+                Leave blank for the default 15-minute blocks.
+              </div>
+            </div>
+
+            <div class="mb-3">
               <%= form.label :conference_lead_id, "Conference Lead", class: "form-label" %>
               <%= form.select :conference_lead_id, 
                   options_from_collection_for_select(@users, :id, :email, params[:conference_lead_id]),
