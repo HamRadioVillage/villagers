@@ -19,7 +19,8 @@
     </div>
   </div>
 
-  <% @schedule_data.each do |date, day_data| %>
+  <% @schedule_data.each_with_index do |(date, day_data), day_index| %>
+    <div id="schedule-day-<%= day_index %>" class="schedule-day">
     <%# ===================== Wide table (desktop / tablet) ===================== %>
     <div class="card mb-4 d-none d-md-block">
       <div class="card-header bg-primary text-white">
@@ -207,6 +208,21 @@
         <% end %>
       </div>
     </div>
+    </div>
+  <% end %>
+
+  <% if @schedule_data.size > 1 %>
+    <div class="schedule-day-nav-spacer"></div>
+    <nav class="schedule-day-nav" aria-label="Jump to day">
+      <div class="schedule-day-nav-inner">
+        <span class="schedule-day-nav-label text-muted">Jump to:</span>
+        <% @schedule_data.each_with_index do |(date, _day_data), day_index| %>
+          <a href="#schedule-day-<%= day_index %>" class="btn btn-sm btn-outline-primary">
+            <%= date.strftime("%a, %b ") + date.day.to_s %>
+          </a>
+        <% end %>
+      </div>
+    </nav>
   <% end %>
 
   <!-- Shift Signup Modal -->
@@ -340,6 +356,42 @@
   .schedule-collapsed .collapsed-program {
     border-left: 4px solid transparent;
     padding-left: 0.5rem;
+  }
+
+  /* Jump-to-day anchor: offset so the day heading isn't flush to the viewport top. */
+  .schedule-day {
+    scroll-margin-top: 1rem;
+  }
+
+  /* Fixed bottom bar with a jump button per day. */
+  .schedule-day-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+    background-color: #fff;
+    border-top: 1px solid #dee2e6;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+    padding: 0.5rem 0.75rem;
+    overflow-x: auto;
+  }
+
+  .schedule-day-nav-inner {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+  }
+
+  .schedule-day-nav-label {
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  /* Reserve space so the fixed bar never covers the last row of content. */
+  .schedule-day-nav-spacer {
+    height: 4rem;
   }
 
   @media (max-width: 768px) {

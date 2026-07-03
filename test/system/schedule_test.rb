@@ -202,6 +202,30 @@ class ScheduleTest < ApplicationSystemTestCase
     assert_no_text "Which shift type?"
   end
 
+  # --- Day jump navigation (issue #187) ---
+
+  test "day jump nav shows a button per day for a multi-day conference" do
+    login_as @volunteer
+    visit conference_schedule_path(@conference)
+
+    assert_selector "nav.schedule-day-nav", visible: true
+    within "nav.schedule-day-nav" do
+      # setup conference spans 2 days (today .. today + 1)
+      assert_selector "a", count: 2
+    end
+  end
+
+  test "clicking a day jump button navigates to that day's anchor" do
+    login_as @volunteer
+    visit conference_schedule_path(@conference)
+
+    within "nav.schedule-day-nav" do
+      all("a")[1].click
+    end
+
+    assert_equal "#schedule-day-1", page.evaluate_script("window.location.hash")
+  end
+
   test "mobile view lets a volunteer cancel a shift they signed up for" do
     VolunteerSignup.create!(user: @volunteer, timeslot: @timeslot)
 

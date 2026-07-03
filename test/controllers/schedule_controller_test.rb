@@ -313,6 +313,42 @@ class ScheduleControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/data-programs/, response.body)
   end
 
+  test "renders a day jump nav with an anchor per day for a multi-day conference" do
+    # setup conference spans 3 days (tomorrow .. tomorrow + 2 days)
+    sign_in @volunteer
+    get conference_schedule_url(@conference)
+    assert_response :success
+
+    assert_match 'id="schedule-day-0"', response.body
+    assert_match 'id="schedule-day-1"', response.body
+    assert_match 'id="schedule-day-2"', response.body
+
+    assert_match 'href="#schedule-day-0"', response.body
+    assert_match 'href="#schedule-day-2"', response.body
+    assert_match "Jump to", response.body
+  end
+
+  test "does not render the day jump nav for a single-day conference" do
+    single_day = Conference.create!(
+      village: @village,
+      name: "One Day Conference",
+      start_date: Date.tomorrow,
+      end_date: Date.tomorrow,
+      conference_hours_start: "09:00",
+      conference_hours_end: "17:00"
+    )
+    ConferenceProgram.create!(conference: single_day, program: @program)
+
+    sign_in @volunteer
+    get conference_schedule_url(single_day)
+    assert_response :success
+
+    # The single day still gets its anchor, but there is no jump nav.
+    assert_match 'id="schedule-day-0"', response.body
+    assert_no_match(/href="#schedule-day-/, response.body)
+    assert_no_match(/Jump to/, response.body)
+  end
+
   test "schedule shows qualified state when user has all required qualifications" do
     qual1 = Qualification.create!(
       name: "Cert A",
