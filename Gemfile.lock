@@ -142,7 +142,7 @@ GEM
       logger
     faraday-multipart (1.2.0)
       multipart-post (~> 2.0)
-    faraday-net_http (3.4.2)
+    faraday-net_http (3.4.4)
       net-http (~> 0.5)
     ffi (1.17.2-aarch64-linux-gnu)
     ffi (1.17.2-aarch64-linux-musl)
@@ -212,7 +212,7 @@ GEM
       net-imap
       net-pop
       net-smtp
-    mailgun-ruby (1.4.1)
+    mailgun-ruby (1.4.4)
       faraday (~> 2.1)
       faraday-multipart (< 2)
       mini_mime
