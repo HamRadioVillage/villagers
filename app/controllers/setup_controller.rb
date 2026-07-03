@@ -1,4 +1,7 @@
 class SetupController < ApplicationController
+  # The first-run wizard runs before any user account exists, so it must be
+  # reachable without authentication.
+  skip_before_action :authenticate_user!
   before_action :redirect_if_setup_complete
 
   def show
