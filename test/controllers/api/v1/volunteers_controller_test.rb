@@ -154,4 +154,45 @@ class Api::V1::VolunteersControllerTest < ActionDispatch::IntegrationTest
     get api_v1_conference_volunteers_url(@conference), headers: bearer(@token)
     assert_equal 3, JSON.parse(response.body)["volunteers"].first["shift_count"]
   end
+
+  # Show
+
+  test "volunteer can show their own totals" do
+    get api_v1_conference_volunteer_url(@conference, @volunteer), headers: bearer(@token)
+    assert_response :success
+    json = JSON.parse(response.body)
+
+    assert_equal @conference.id, json["conference_id"]
+    assert_equal @volunteer.id, json["volunteer"]["user_id"]
+    assert_equal "Vol One", json["volunteer"]["name"]
+    assert_equal 3, json["volunteer"]["shift_count"]
+    assert_equal 0.75, json["volunteer"]["total_hours"]
+  end
+
+  test "volunteer showing another volunteer gets 403" do
+    get api_v1_conference_volunteer_url(@conference, @volunteer2), headers: bearer(@token)
+    assert_response :forbidden
+  end
+
+  test "conference lead can show any volunteer" do
+    lead_token = @lead.api_tokens.create!(name: "lead token")
+    get api_v1_conference_volunteer_url(@conference, @volunteer2), headers: bearer(lead_token)
+    assert_response :success
+    assert_equal 1, JSON.parse(response.body)["volunteer"]["shift_count"]
+  end
+
+  test "show returns zero totals for a volunteer with no signups" do
+    lead_token = @lead.api_tokens.create!(name: "lead token")
+    get api_v1_conference_volunteer_url(@conference, @lead), headers: bearer(lead_token)
+    json = JSON.parse(response.body)
+
+    assert_equal 0, json["volunteer"]["shift_count"]
+    assert_equal 0.0, json["volunteer"]["total_hours"]
+  end
+
+  test "show returns 404 for an unknown volunteer" do
+    lead_token = @lead.api_tokens.create!(name: "lead token")
+    get api_v1_conference_volunteer_url(@conference, id: 999_999), headers: bearer(lead_token)
+    assert_response :not_found
+  end
 end

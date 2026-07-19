@@ -66,4 +66,28 @@ class Api::V1::ConferencesControllerTest < ActionDispatch::IntegrationTest
     ids = JSON.parse(response.body)["conferences"].map { |c| c["id"] }
     assert_equal [ @conference.id, @archived_conference.id ], ids
   end
+
+  # Show
+
+  test "show returns a single conference" do
+    get api_v1_conference_url(@conference), headers: bearer(@token)
+    assert_response :success
+    entry = JSON.parse(response.body)["conference"]
+
+    assert_equal @conference.id, entry["id"]
+    assert_equal "Test Conference", entry["name"]
+    assert_equal "Las Vegas", entry["city"]
+    assert_equal "09:00", entry["hours_start"]
+    assert_equal false, entry["archived"]
+  end
+
+  test "show returns 404 for an unknown conference" do
+    get api_v1_conference_url(id: 999_999), headers: bearer(@token)
+    assert_response :not_found
+  end
+
+  test "show returns 401 without credentials" do
+    get api_v1_conference_url(@conference)
+    assert_response :unauthorized
+  end
 end

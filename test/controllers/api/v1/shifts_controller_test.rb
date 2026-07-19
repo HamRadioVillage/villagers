@@ -118,4 +118,34 @@ class Api::V1::ShiftsControllerTest < ActionDispatch::IntegrationTest
     get api_v1_conference_shifts_url(conference_id: 999_999), headers: bearer(@token)
     assert_response :not_found
   end
+
+  # Show
+
+  test "volunteer can show their own shift" do
+    get api_v1_conference_shift_url(@conference, @signup_9am), headers: bearer(@token)
+    assert_response :success
+    json = JSON.parse(response.body)
+
+    assert_equal @conference.id, json["conference_id"]
+    assert_equal @signup_9am.id, json["shift"]["id"]
+    assert_equal @volunteer.id, json["shift"]["user_id"]
+    assert_equal "Test Program", json["shift"]["program"]
+    assert_equal @timeslot_9am.start_time.utc.iso8601, json["shift"]["starts_at"]
+  end
+
+  test "volunteer requesting another user's shift gets 404" do
+    get api_v1_conference_shift_url(@conference, @other_user_signup), headers: bearer(@token)
+    assert_response :not_found
+  end
+
+  test "conference lead can show any shift" do
+    get api_v1_conference_shift_url(@conference, @other_user_signup), headers: bearer(@lead_token)
+    assert_response :success
+    assert_equal @volunteer2.id, JSON.parse(response.body)["shift"]["user_id"]
+  end
+
+  test "show returns 404 for an unknown shift" do
+    get api_v1_conference_shift_url(@conference, id: 999_999), headers: bearer(@token)
+    assert_response :not_found
+  end
 end

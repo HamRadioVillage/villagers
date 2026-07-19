@@ -8,6 +8,10 @@ module Api
       user.present?
     end
 
+    def show?
+      index?
+    end
+
     def view_all_volunteers?
       user.present? && user.can_manage_conference?(record)
     end

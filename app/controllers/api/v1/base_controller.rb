@@ -42,6 +42,12 @@ module Api
         request.env["warden"]&.user(:user)
       end
 
+      # All signups belonging to a conference (via timeslot -> conference_program).
+      def conference_signups(conference)
+        VolunteerSignup.joins(timeslot: :conference_program)
+                       .where(conference_programs: { conference_id: conference.id })
+      end
+
       # Restricts a VolunteerSignup relation to what the caller may see:
       # conference managers see everyone (optionally narrowed by ?user_id=),
       # everyone else is pinned to their own rows. Asking for someone else's

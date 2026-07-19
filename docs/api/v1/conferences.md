@@ -3,9 +3,12 @@
 The conference (event) is the top-level API resource. Volunteer data is
 exposed as sub-resources of a conference.
 
-- [`GET /api/v1/conferences`](#get-apiv1conferences) — event-level details
+- [`GET /api/v1/conferences`](#get-apiv1conferences) — list event-level details
+- [`GET /api/v1/conferences/:id`](#get-apiv1conferencesid) — one conference
 - [`GET /api/v1/conferences/:conference_id/volunteers`](#get-apiv1conferencesconference_idvolunteers) — per-volunteer totals
+- [`GET /api/v1/conferences/:conference_id/volunteers/:id`](#get-apiv1conferencesconference_idvolunteersid) — one volunteer's totals
 - [`GET /api/v1/conferences/:conference_id/shifts`](#get-apiv1conferencesconference_idshifts) — shift-level detail
+- [`GET /api/v1/conferences/:conference_id/shifts/:id`](#get-apiv1conferencesconference_idshiftsid) — one shift
 
 ## GET /api/v1/conferences
 
@@ -48,6 +51,34 @@ curl -H "Authorization: Bearer vlg_..." \
 | `start_date` / `end_date` | ISO 8601 dates |
 | `hours_start` / `hours_end` | Daily conference hours (`HH:MM`) |
 | `archived` | Whether the conference has been archived |
+
+## GET /api/v1/conferences/:id
+
+A single conference, same fields as the list entries above.
+
+```
+curl -H "Authorization: Bearer vlg_..." \
+  https://example.org/api/v1/conferences/1
+```
+
+```json
+{
+  "conference": {
+    "id": 1,
+    "name": "DEF CON 34",
+    "city": "Las Vegas",
+    "state": "NV",
+    "country": "US",
+    "start_date": "2026-08-07",
+    "end_date": "2026-08-09",
+    "hours_start": "09:00",
+    "hours_end": "17:00",
+    "archived": false
+  }
+}
+```
+
+`404` for an unknown conference.
 
 ## GET /api/v1/conferences/:conference_id/volunteers
 
@@ -96,6 +127,27 @@ curl -H "Authorization: Bearer vlg_..." \
 
 `401` unauthenticated · `403` non-manager requesting another `user_id` ·
 `404` unknown conference. See [errors](../README.md#errors).
+
+## GET /api/v1/conferences/:conference_id/volunteers/:id
+
+One volunteer's totals for the conference (`:id` is the user id), same fields
+as the list entries. Unlike the list, a volunteer with no signups is returned
+with zero totals rather than omitted.
+
+```
+curl -H "Authorization: Bearer vlg_..." \
+  https://example.org/api/v1/conferences/1/volunteers/5
+```
+
+```json
+{
+  "conference_id": 1,
+  "volunteer": { "user_id": 5, "name": "Ada Lovelace", "handle": "ada", "shift_count": 12, "total_hours": 3.0 }
+}
+```
+
+`403` for a non-manager requesting anyone but themselves · `404` for an
+unknown user or conference.
 
 ## GET /api/v1/conferences/:conference_id/shifts
 
@@ -151,3 +203,27 @@ curl -H "Authorization: Bearer vlg_..." \
 `400` unparseable `from`/`to` · `401` unauthenticated · `403` non-manager
 requesting another `user_id` · `404` unknown conference.
 See [errors](../README.md#errors).
+
+## GET /api/v1/conferences/:conference_id/shifts/:id
+
+A single shift (`:id` is the signup id), same fields as the list entries.
+Non-managers can only see their own shifts; anyone else's shift id returns
+`404` (indistinguishable from a nonexistent one).
+
+```
+curl -H "Authorization: Bearer vlg_..." \
+  https://example.org/api/v1/conferences/1/shifts/42
+```
+
+```json
+{
+  "conference_id": 1,
+  "shift": {
+    "id": 42,
+    "user_id": 5,
+    "program": "Ham Exams",
+    "starts_at": "2026-08-07T09:00:00Z",
+    "ends_at": "2026-08-07T09:15:00Z"
+  }
+}
+```
