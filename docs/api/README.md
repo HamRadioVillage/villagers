@@ -7,6 +7,10 @@ new version prefix (`/api/v2/`); existing versions keep working until formally
 deprecated. Additive changes (new endpoints, new response fields) may appear
 within a version.
 
+Endpoint documentation lives in a directory per version:
+
+- [v1 endpoints](v1/README.md)
+
 ## Authentication
 
 The API accepts either of:
@@ -43,72 +47,3 @@ are scoped: regular volunteers only ever see their own data, while conference
 leads/admins and village admins see every volunteer at that conference and may
 use the `user_id` filter freely. A regular volunteer passing someone else's
 `user_id` gets a `403`.
-
-## Endpoints
-
-### GET /api/v1/conferences/:conference_id/volunteers
-
-Per-volunteer signed-up totals for a conference. Each signup is one 15-minute
-timeslot, so `total_hours = shift_count × 0.25`.
-
-Query parameters:
-
-| Param | Description |
-|-------|-------------|
-| `user_id` | Only this volunteer's totals |
-
-```
-curl -H "Authorization: Bearer vlg_..." \
-  https://example.org/api/v1/conferences/1/volunteers
-```
-
-```json
-{
-  "conference_id": 1,
-  "volunteers": [
-    { "user_id": 5, "name": "Ada Lovelace", "handle": "ada", "shift_count": 12, "total_hours": 3.0 }
-  ]
-}
-```
-
-Volunteers are sorted by `shift_count` descending. Users with no signups at the
-conference are omitted.
-
-### GET /api/v1/conferences/:conference_id/shifts
-
-Shift-level detail, ordered by start time.
-
-Query parameters:
-
-| Param | Description |
-|-------|-------------|
-| `user_id` | Only this volunteer's shifts |
-| `program_id` | Only shifts for this program |
-| `from` | ISO 8601 timestamp; shifts starting at or after this time |
-| `to` | ISO 8601 timestamp; shifts starting at or before this time |
-
-```
-curl -H "Authorization: Bearer vlg_..." \
-  "https://example.org/api/v1/conferences/1/shifts?user_id=5&from=2026-08-07T09:00:00Z"
-```
-
-```json
-{
-  "conference_id": 1,
-  "shifts": [
-    {
-      "id": 42,
-      "user_id": 5,
-      "program": "Ham Exams",
-      "starts_at": "2026-08-07T09:00:00Z",
-      "ends_at": "2026-08-07T09:15:00Z"
-    }
-  ]
-}
-```
-
-## Future surfaces
-
-The `/api/v1/` namespace is the foundation for the rest of the app's API
-(conferences, programs, signup creation, etc.); new endpoints will be
-documented here as they land.
