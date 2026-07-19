@@ -1,9 +1,9 @@
 module Api
   module V1
-    # GET /api/v1/conferences/:conference_id/volunteer_signups
+    # GET /api/v1/conferences/:conference_id/shifts
     # Shift-level detail for a conference, ordered by start time.
     # Filters: user_id, program_id, from/to (ISO 8601, on timeslot start_time).
-    class VolunteerSignupsController < BaseController
+    class ShiftsController < BaseController
       def index
         conference = Conference.find(params[:conference_id])
         authorize conference, :index?, policy_class: Api::ConferenceVolunteerDataPolicy
@@ -26,7 +26,7 @@ module Api
           }
         end
 
-        render json: { conference_id: conference.id, signups: signups }
+        render json: { conference_id: conference.id, shifts: signups }
       end
 
       private

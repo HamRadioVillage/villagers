@@ -1,8 +1,8 @@
 module Api
   module V1
-    # GET /api/v1/conferences/:conference_id/volunteer_hours
+    # GET /api/v1/conferences/:conference_id/volunteers
     # Per-volunteer signed-up totals for a conference. Filters: user_id.
-    class VolunteerHoursController < BaseController
+    class VolunteersController < BaseController
       def index
         conference = Conference.find(params[:conference_id])
         authorize conference, :index?, policy_class: Api::ConferenceVolunteerDataPolicy

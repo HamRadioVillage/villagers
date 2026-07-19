@@ -10,8 +10,8 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       resources :conferences, only: [] do
-        resources :volunteer_hours, only: [ :index ]
-        resources :volunteer_signups, only: [ :index ]
+        resources :volunteers, only: [ :index ]
+        resources :shifts, only: [ :index ]
       end
     end
   end

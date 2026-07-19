@@ -46,7 +46,7 @@ use the `user_id` filter freely. A regular volunteer passing someone else's
 
 ## Endpoints
 
-### GET /api/v1/conferences/:conference_id/volunteer_hours
+### GET /api/v1/conferences/:conference_id/volunteers
 
 Per-volunteer signed-up totals for a conference. Each signup is one 15-minute
 timeslot, so `total_hours = shift_count × 0.25`.
@@ -59,7 +59,7 @@ Query parameters:
 
 ```
 curl -H "Authorization: Bearer vlg_..." \
-  https://example.org/api/v1/conferences/1/volunteer_hours
+  https://example.org/api/v1/conferences/1/volunteers
 ```
 
 ```json
@@ -74,7 +74,7 @@ curl -H "Authorization: Bearer vlg_..." \
 Volunteers are sorted by `shift_count` descending. Users with no signups at the
 conference are omitted.
 
-### GET /api/v1/conferences/:conference_id/volunteer_signups
+### GET /api/v1/conferences/:conference_id/shifts
 
 Shift-level detail, ordered by start time.
 
@@ -89,13 +89,13 @@ Query parameters:
 
 ```
 curl -H "Authorization: Bearer vlg_..." \
-  "https://example.org/api/v1/conferences/1/volunteer_signups?user_id=5&from=2026-08-07T09:00:00Z"
+  "https://example.org/api/v1/conferences/1/shifts?user_id=5&from=2026-08-07T09:00:00Z"
 ```
 
 ```json
 {
   "conference_id": 1,
-  "signups": [
+  "shifts": [
     {
       "id": 42,
       "user_id": 5,

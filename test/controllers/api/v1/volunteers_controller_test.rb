@@ -1,6 +1,6 @@
 require "test_helper"
 
-class Api::V1::VolunteerHoursControllerTest < ActionDispatch::IntegrationTest
+class Api::V1::VolunteersControllerTest < ActionDispatch::IntegrationTest
   setup do
     @village = Village.create!(name: "Test Village", setup_complete: true)
     @conference = Conference.create!(
@@ -39,38 +39,38 @@ class Api::V1::VolunteerHoursControllerTest < ActionDispatch::IntegrationTest
   # Authentication
 
   test "returns 401 without credentials" do
-    get api_v1_conference_volunteer_hours_url(@conference)
+    get api_v1_conference_volunteers_url(@conference)
     assert_response :unauthorized
     assert_equal "unauthorized", JSON.parse(response.body)["error"]
   end
 
   test "returns 401 with an invalid token" do
-    get api_v1_conference_volunteer_hours_url(@conference),
+    get api_v1_conference_volunteers_url(@conference),
         headers: { "Authorization" => "Bearer vlg_bogus" }
     assert_response :unauthorized
   end
 
   test "returns 401 with a revoked token" do
     @token.revoke!
-    get api_v1_conference_volunteer_hours_url(@conference), headers: bearer(@token)
+    get api_v1_conference_volunteers_url(@conference), headers: bearer(@token)
     assert_response :unauthorized
   end
 
   test "authenticates with a valid bearer token" do
-    get api_v1_conference_volunteer_hours_url(@conference), headers: bearer(@token)
+    get api_v1_conference_volunteers_url(@conference), headers: bearer(@token)
     assert_response :success
   end
 
   test "authenticates with a devise session" do
     sign_in @volunteer
-    get api_v1_conference_volunteer_hours_url(@conference)
+    get api_v1_conference_volunteers_url(@conference)
     assert_response :success
   end
 
   # Payload and scoping
 
   test "volunteer sees only their own totals" do
-    get api_v1_conference_volunteer_hours_url(@conference), headers: bearer(@token)
+    get api_v1_conference_volunteers_url(@conference), headers: bearer(@token)
     json = JSON.parse(response.body)
 
     assert_equal @conference.id, json["conference_id"]
@@ -84,14 +84,14 @@ class Api::V1::VolunteerHoursControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "volunteer may filter by their own user_id" do
-    get api_v1_conference_volunteer_hours_url(@conference, user_id: @volunteer.id),
+    get api_v1_conference_volunteers_url(@conference, user_id: @volunteer.id),
         headers: bearer(@token)
     assert_response :success
     assert_equal 1, JSON.parse(response.body)["volunteers"].size
   end
 
   test "volunteer requesting another user_id gets 403" do
-    get api_v1_conference_volunteer_hours_url(@conference, user_id: @volunteer2.id),
+    get api_v1_conference_volunteers_url(@conference, user_id: @volunteer2.id),
         headers: bearer(@token)
     assert_response :forbidden
     assert_equal "forbidden", JSON.parse(response.body)["error"]
@@ -99,7 +99,7 @@ class Api::V1::VolunteerHoursControllerTest < ActionDispatch::IntegrationTest
 
   test "conference lead sees all volunteers" do
     lead_token = @lead.api_tokens.create!(name: "lead token")
-    get api_v1_conference_volunteer_hours_url(@conference), headers: bearer(lead_token)
+    get api_v1_conference_volunteers_url(@conference), headers: bearer(lead_token)
     json = JSON.parse(response.body)
 
     assert_equal 2, json["volunteers"].size
@@ -111,7 +111,7 @@ class Api::V1::VolunteerHoursControllerTest < ActionDispatch::IntegrationTest
 
   test "conference lead may filter by user_id" do
     lead_token = @lead.api_tokens.create!(name: "lead token")
-    get api_v1_conference_volunteer_hours_url(@conference, user_id: @volunteer2.id),
+    get api_v1_conference_volunteers_url(@conference, user_id: @volunteer2.id),
         headers: bearer(lead_token)
     json = JSON.parse(response.body)
 
@@ -124,12 +124,12 @@ class Api::V1::VolunteerHoursControllerTest < ActionDispatch::IntegrationTest
     UserRole.create!(user: admin, role: Role.find_or_create_by!(name: Role::VILLAGE_ADMIN))
     admin_token = admin.api_tokens.create!(name: "admin token")
 
-    get api_v1_conference_volunteer_hours_url(@conference), headers: bearer(admin_token)
+    get api_v1_conference_volunteers_url(@conference), headers: bearer(admin_token)
     assert_equal 2, JSON.parse(response.body)["volunteers"].size
   end
 
   test "returns 404 for an unknown conference" do
-    get api_v1_conference_volunteer_hours_url(conference_id: 999_999), headers: bearer(@token)
+    get api_v1_conference_volunteers_url(conference_id: 999_999), headers: bearer(@token)
     assert_response :not_found
     assert_equal "not_found", JSON.parse(response.body)["error"]
   end
@@ -151,7 +151,7 @@ class Api::V1::VolunteerHoursControllerTest < ActionDispatch::IntegrationTest
     )
     VolunteerSignup.create!(user: @volunteer, timeslot: other_timeslot)
 
-    get api_v1_conference_volunteer_hours_url(@conference), headers: bearer(@token)
+    get api_v1_conference_volunteers_url(@conference), headers: bearer(@token)
     assert_equal 3, JSON.parse(response.body)["volunteers"].first["shift_count"]
   end
 end

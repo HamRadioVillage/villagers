@@ -1,6 +1,6 @@
 require "test_helper"
 
-class Api::V1::VolunteerSignupsControllerTest < ActionDispatch::IntegrationTest
+class Api::V1::ShiftsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @village = Village.create!(name: "Test Village", setup_complete: true)
     @conference = Conference.create!(
@@ -51,17 +51,17 @@ class Api::V1::VolunteerSignupsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "returns 401 without credentials" do
-    get api_v1_conference_volunteer_signups_url(@conference)
+    get api_v1_conference_shifts_url(@conference)
     assert_response :unauthorized
   end
 
   test "volunteer sees only their own signups ordered by start time" do
-    get api_v1_conference_volunteer_signups_url(@conference), headers: bearer(@token)
+    get api_v1_conference_shifts_url(@conference), headers: bearer(@token)
     assert_response :success
     json = JSON.parse(response.body)
 
     assert_equal @conference.id, json["conference_id"]
-    signups = json["signups"]
+    signups = json["shifts"]
     assert_equal 3, signups.size
     assert_equal [ @signup_9am.id, @signup_10am.id, @other_program_signup.id ], signups.map { |s| s["id"] }
 
@@ -73,49 +73,49 @@ class Api::V1::VolunteerSignupsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "volunteer requesting another user_id gets 403" do
-    get api_v1_conference_volunteer_signups_url(@conference, user_id: @volunteer2.id),
+    get api_v1_conference_shifts_url(@conference, user_id: @volunteer2.id),
         headers: bearer(@token)
     assert_response :forbidden
   end
 
   test "conference lead sees all signups and may filter by user_id" do
-    get api_v1_conference_volunteer_signups_url(@conference), headers: bearer(@lead_token)
-    assert_equal 4, JSON.parse(response.body)["signups"].size
+    get api_v1_conference_shifts_url(@conference), headers: bearer(@lead_token)
+    assert_equal 4, JSON.parse(response.body)["shifts"].size
 
-    get api_v1_conference_volunteer_signups_url(@conference, user_id: @volunteer2.id),
+    get api_v1_conference_shifts_url(@conference, user_id: @volunteer2.id),
         headers: bearer(@lead_token)
-    signups = JSON.parse(response.body)["signups"]
+    signups = JSON.parse(response.body)["shifts"]
     assert_equal [ @other_user_signup.id ], signups.map { |s| s["id"] }
   end
 
   test "filters by program_id" do
-    get api_v1_conference_volunteer_signups_url(@conference, program_id: @other_program.id),
+    get api_v1_conference_shifts_url(@conference, program_id: @other_program.id),
         headers: bearer(@token)
-    signups = JSON.parse(response.body)["signups"]
+    signups = JSON.parse(response.body)["shifts"]
     assert_equal [ @other_program_signup.id ], signups.map { |s| s["id"] }
   end
 
   test "filters by from and to timestamps" do
     from = (Date.tomorrow.to_datetime + 9.hours + 30.minutes).utc.iso8601
-    get api_v1_conference_volunteer_signups_url(@conference, from: from), headers: bearer(@token)
-    signups = JSON.parse(response.body)["signups"]
+    get api_v1_conference_shifts_url(@conference, from: from), headers: bearer(@token)
+    signups = JSON.parse(response.body)["shifts"]
     assert_equal [ @signup_10am.id, @other_program_signup.id ], signups.map { |s| s["id"] }
 
     to = (Date.tomorrow.to_datetime + 9.hours + 30.minutes).utc.iso8601
-    get api_v1_conference_volunteer_signups_url(@conference, to: to), headers: bearer(@token)
-    signups = JSON.parse(response.body)["signups"]
+    get api_v1_conference_shifts_url(@conference, to: to), headers: bearer(@token)
+    signups = JSON.parse(response.body)["shifts"]
     assert_equal [ @signup_9am.id ], signups.map { |s| s["id"] }
   end
 
   test "returns 400 for an unparseable from/to" do
-    get api_v1_conference_volunteer_signups_url(@conference, from: "not-a-date"),
+    get api_v1_conference_shifts_url(@conference, from: "not-a-date"),
         headers: bearer(@token)
     assert_response :bad_request
     assert_equal "invalid_date", JSON.parse(response.body)["error"]
   end
 
   test "returns 404 for an unknown conference" do
-    get api_v1_conference_volunteer_signups_url(conference_id: 999_999), headers: bearer(@token)
+    get api_v1_conference_shifts_url(conference_id: 999_999), headers: bearer(@token)
     assert_response :not_found
   end
 end
