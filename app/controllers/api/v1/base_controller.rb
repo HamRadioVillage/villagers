@@ -42,6 +42,16 @@ module Api
         request.env["warden"]&.user(:user)
       end
 
+      def shift_json(signup)
+        {
+          id: signup.id,
+          user_id: signup.user_id,
+          program: signup.timeslot.conference_program.program.name,
+          starts_at: signup.timeslot.start_time.utc.iso8601,
+          ends_at: signup.timeslot.end_time.utc.iso8601
+        }
+      end
+
       # All signups belonging to a conference (via timeslot -> conference_program).
       def conference_signups(conference)
         VolunteerSignup.joins(timeslot: :conference_program)

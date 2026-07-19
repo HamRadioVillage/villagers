@@ -15,7 +15,7 @@ module Api
         volunteers = counts.map { |user_id, shift_count| volunteer_json(users[user_id], shift_count) }
                            .sort_by { |volunteer| [ -volunteer[:shift_count], volunteer[:user_id] ] }
 
-        render json: { conference_id: conference.id, volunteers: volunteers }
+        render json: { conference_id: conference.id, conference: conference.name, volunteers: volunteers }
       end
 
       def show
@@ -28,9 +28,15 @@ module Api
         end
 
         volunteer = User.find(params[:id])
-        shift_count = volunteer.shifts_for_conference(conference)
+        shifts = volunteer.volunteer_signups_for_conference(conference)
+                          .order("timeslots.start_time")
+                          .map { |signup| shift_json(signup) }
 
-        render json: { conference_id: conference.id, volunteer: volunteer_json(volunteer, shift_count) }
+        render json: {
+          conference_id: conference.id,
+          conference: conference.name,
+          volunteer: volunteer_json(volunteer, shifts.size).merge(shifts: shifts)
+        }
       end
 
       private
@@ -38,7 +44,7 @@ module Api
       def volunteer_json(user, shift_count)
         {
           user_id: user.id,
-          name: user.name,
+          email: user.email,
           handle: user.handle,
           shift_count: shift_count,
           # Each signup is one 15-minute timeslot (see User#hours_for_conference)

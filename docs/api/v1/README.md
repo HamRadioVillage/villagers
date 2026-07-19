@@ -11,7 +11,7 @@ Endpoints are documented per top-level resource:
   - `GET /api/v1/conferences` — event-level details
   - `GET /api/v1/conferences/:id` — one conference
   - `GET /api/v1/conferences/:conference_id/volunteers` — per-volunteer totals
-  - `GET /api/v1/conferences/:conference_id/volunteers/:id` — one volunteer's totals
+  - `GET /api/v1/conferences/:conference_id/volunteers/:id` — one volunteer's totals + their shifts
   - `GET /api/v1/conferences/:conference_id/shifts` — shift-level detail
   - `GET /api/v1/conferences/:conference_id/shifts/:id` — one shift
 

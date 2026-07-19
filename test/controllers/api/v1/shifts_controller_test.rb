@@ -61,6 +61,7 @@ class Api::V1::ShiftsControllerTest < ActionDispatch::IntegrationTest
     json = JSON.parse(response.body)
 
     assert_equal @conference.id, json["conference_id"]
+    assert_equal "Test Conference", json["conference"]
     signups = json["shifts"]
     assert_equal 3, signups.size
     assert_equal [ @signup_9am.id, @signup_10am.id, @other_program_signup.id ], signups.map { |s| s["id"] }
@@ -127,6 +128,7 @@ class Api::V1::ShiftsControllerTest < ActionDispatch::IntegrationTest
     json = JSON.parse(response.body)
 
     assert_equal @conference.id, json["conference_id"]
+    assert_equal "Test Conference", json["conference"]
     assert_equal @signup_9am.id, json["shift"]["id"]
     assert_equal @volunteer.id, json["shift"]["user_id"]
     assert_equal "Test Program", json["shift"]["program"]

@@ -6,7 +6,7 @@ exposed as sub-resources of a conference.
 - [`GET /api/v1/conferences`](#get-apiv1conferences) — list event-level details
 - [`GET /api/v1/conferences/:id`](#get-apiv1conferencesid) — one conference
 - [`GET /api/v1/conferences/:conference_id/volunteers`](#get-apiv1conferencesconference_idvolunteers) — per-volunteer totals
-- [`GET /api/v1/conferences/:conference_id/volunteers/:id`](#get-apiv1conferencesconference_idvolunteersid) — one volunteer's totals
+- [`GET /api/v1/conferences/:conference_id/volunteers/:id`](#get-apiv1conferencesconference_idvolunteersid) — one volunteer's totals + their shifts
 - [`GET /api/v1/conferences/:conference_id/shifts`](#get-apiv1conferencesconference_idshifts) — shift-level detail
 - [`GET /api/v1/conferences/:conference_id/shifts/:id`](#get-apiv1conferencesconference_idshiftsid) — one shift
 
@@ -107,8 +107,9 @@ curl -H "Authorization: Bearer vlg_..." \
 ```json
 {
   "conference_id": 1,
+  "conference": "DEF CON 34",
   "volunteers": [
-    { "user_id": 5, "name": "Ada Lovelace", "handle": "ada", "shift_count": 12, "total_hours": 3.0 }
+    { "user_id": 5, "email": "ada@example.org", "handle": "ada", "shift_count": 12, "total_hours": 3.0 }
   ]
 }
 ```
@@ -118,7 +119,7 @@ curl -H "Authorization: Bearer vlg_..." \
 | Field | Description |
 |-------|-------------|
 | `user_id` | The volunteer's user id |
-| `name` | Display name |
+| `email` | Email address (common matching field) |
 | `handle` | Handle, if set |
 | `shift_count` | Number of 15-minute timeslots signed up for |
 | `total_hours` | `shift_count × 0.25` |
@@ -131,8 +132,10 @@ curl -H "Authorization: Bearer vlg_..." \
 ## GET /api/v1/conferences/:conference_id/volunteers/:id
 
 One volunteer's totals for the conference (`:id` is the user id), same fields
-as the list entries. Unlike the list, a volunteer with no signups is returned
-with zero totals rather than omitted.
+as the list entries, plus the complete list of their individual shifts for the
+event (same shape as the [shifts endpoint](#get-apiv1conferencesconference_idshifts)).
+Unlike the list, a volunteer with no signups is returned with zero totals and
+an empty `shifts` array rather than omitted.
 
 ```
 curl -H "Authorization: Bearer vlg_..." \
@@ -142,7 +145,23 @@ curl -H "Authorization: Bearer vlg_..." \
 ```json
 {
   "conference_id": 1,
-  "volunteer": { "user_id": 5, "name": "Ada Lovelace", "handle": "ada", "shift_count": 12, "total_hours": 3.0 }
+  "conference": "DEF CON 34",
+  "volunteer": {
+    "user_id": 5,
+    "email": "ada@example.org",
+    "handle": "ada",
+    "shift_count": 12,
+    "total_hours": 3.0,
+    "shifts": [
+      {
+        "id": 42,
+        "user_id": 5,
+        "program": "Ham Exams",
+        "starts_at": "2026-08-07T09:00:00Z",
+        "ends_at": "2026-08-07T09:15:00Z"
+      }
+    ]
+  }
 }
 ```
 
@@ -176,6 +195,7 @@ curl -H "Authorization: Bearer vlg_..." \
 ```json
 {
   "conference_id": 1,
+  "conference": "DEF CON 34",
   "shifts": [
     {
       "id": 42,
@@ -218,6 +238,7 @@ curl -H "Authorization: Bearer vlg_..." \
 ```json
 {
   "conference_id": 1,
+  "conference": "DEF CON 34",
   "shift": {
     "id": 42,
     "user_id": 5,

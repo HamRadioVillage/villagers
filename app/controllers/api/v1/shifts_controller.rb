@@ -17,7 +17,7 @@ module Api
                       .order("timeslots.start_time")
                       .map { |signup| shift_json(signup) }
 
-        render json: { conference_id: conference.id, shifts: shifts }
+        render json: { conference_id: conference.id, conference: conference.name, shifts: shifts }
       end
 
       def show
@@ -30,20 +30,10 @@ module Api
                  .includes(timeslot: { conference_program: :program })
                  .find(params[:id])
 
-        render json: { conference_id: conference.id, shift: shift_json(signup) }
+        render json: { conference_id: conference.id, conference: conference.name, shift: shift_json(signup) }
       end
 
       private
-
-      def shift_json(signup)
-        {
-          id: signup.id,
-          user_id: signup.user_id,
-          program: signup.timeslot.conference_program.program.name,
-          starts_at: signup.timeslot.start_time.utc.iso8601,
-          ends_at: signup.timeslot.end_time.utc.iso8601
-        }
-      end
 
       def apply_filters(scope)
         if params[:program_id].present?
