@@ -148,9 +148,10 @@ class Conference < ApplicationRecord
     return unless saved_change_to_start_date? || saved_change_to_end_date? ||
                   saved_change_to_conference_hours_start? || saved_change_to_conference_hours_end?
 
-    # Regenerate timeslots for all conference programs
+    # Reconcile timeslots for all conference programs. TimeslotGenerator keeps
+    # timeslots (and signups) whose start time still fits the new dates/hours
+    # instead of destroying and recreating everything (issue #225).
     conference_programs.find_each do |cp|
-      cp.timeslots.destroy_all
       TimeslotGenerator.new(cp).generate
     end
   end
