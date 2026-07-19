@@ -9,7 +9,7 @@ Rails.application.routes.draw do
   # can ship as /api/v2/ without disturbing existing integrations.
   namespace :api do
     namespace :v1 do
-      resources :conferences, only: [] do
+      resources :conferences, only: [ :index ] do
         resources :volunteers, only: [ :index ]
         resources :shifts, only: [ :index ]
       end

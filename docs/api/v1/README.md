@@ -3,13 +3,15 @@
 See the [API overview](../README.md) for versioning, authentication, errors,
 and access rules that apply to every endpoint.
 
-## Endpoints
+## Resources
 
-| Endpoint | Description |
-|----------|-------------|
-| [`GET /api/v1/conferences/:conference_id/volunteers`](volunteers.md) | Per-volunteer signed-up totals for a conference |
-| [`GET /api/v1/conferences/:conference_id/shifts`](shifts.md) | Shift-level detail for a conference |
+Endpoints are documented per top-level resource:
+
+- [Conferences](conferences.md)
+  - `GET /api/v1/conferences` — event-level details
+  - `GET /api/v1/conferences/:conference_id/volunteers` — per-volunteer totals
+  - `GET /api/v1/conferences/:conference_id/shifts` — shift-level detail
 
 The `/api/v1/` namespace is the foundation for the rest of the app's API
-(conferences, programs, signup creation, etc.); new endpoints will be
-documented here as they land.
+(programs, signup creation, etc.); new resources will be documented here as
+they land.
