@@ -92,8 +92,18 @@
               <% end %>
             <% end %>
           </li>
-          <li class="nav-item">
-            <%= link_to "Profile", edit_user_registration_path, class: "nav-link" %>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Profile
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+              <li>
+                <%= link_to "Edit Profile", edit_user_registration_path, class: "dropdown-item" %>
+              </li>
+              <li>
+                <%= link_to "API Tokens", api_tokens_path, class: "dropdown-item" %>
+              </li>
+            </ul>
           </li>
           <li class="nav-item">
             <%= link_to "Logout", destroy_user_session_path, method: :delete, class: "nav-link", data: { turbo_method: :delete } %>

@@ -1,0 +1,78 @@
+<div class="container mt-4">
+  <div class="row mb-4">
+    <div class="col-12">
+      <h1 class="mb-0">API Tokens</h1>
+      <p class="text-muted mb-0">
+        Personal access tokens for the <code>/api/v1</code> JSON API.
+        Send one as an <code>Authorization: Bearer</code> header.
+      </p>
+    </div>
+  </div>
+
+  <% if flash[:new_api_token] %>
+    <div class="alert alert-warning">
+      <h5>Your new token</h5>
+      <p class="mb-1"><code class="user-select-all"><%= flash[:new_api_token] %></code></p>
+      <p class="mb-0 small">Copy it now — it won't be shown again.</p>
+    </div>
+  <% end %>
+
+  <div class="card mb-4">
+    <div class="card-header">Create a token</div>
+    <div class="card-body">
+      <%= form_with model: ApiToken.new, url: api_tokens_path, class: "row g-2 align-items-end" do |form| %>
+        <div class="col-auto">
+          <%= form.label :name, "Token name", class: "form-label" %>
+          <%= form.text_field :name, class: "form-control", placeholder: "e.g. Shift report script" %>
+        </div>
+        <div class="col-auto">
+          <%= form.submit "Create token", class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <% if @api_tokens.any? %>
+    <div class="card">
+      <table class="table table-striped mb-0">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Created</th>
+            <th>Last used</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @api_tokens.each do |token| %>
+            <tr>
+              <td><%= token.name %></td>
+              <td><%= token.created_at.to_date %></td>
+              <td><%= token.last_used_at ? "#{time_ago_in_words(token.last_used_at)} ago" : "Never" %></td>
+              <td>
+                <% if token.revoked? %>
+                  <span class="badge bg-secondary">Revoked</span>
+                <% else %>
+                  <span class="badge bg-success">Active</span>
+                <% end %>
+              </td>
+              <td class="text-end">
+                <% unless token.revoked? %>
+                  <%= link_to "Revoke", api_token_path(token),
+                      data: { turbo_method: :delete, turbo_confirm: "Revoke this token? Anything using it will stop working." },
+                      class: "btn btn-sm btn-outline-danger" %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="alert alert-info">
+      <h5>No API Tokens</h5>
+      <p class="mb-0">You haven't created any API tokens yet.</p>
+    </div>
+  <% end %>
+</div>

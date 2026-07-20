@@ -5,6 +5,17 @@ Rails.application.routes.draw do
   }
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
+  # Versioned JSON API. All API paths live under /api/v1/ so breaking changes
+  # can ship as /api/v2/ without disturbing existing integrations.
+  namespace :api do
+    namespace :v1 do
+      resources :conferences, only: [ :index, :show ] do
+        resources :volunteers, only: [ :index, :show ]
+        resources :shifts, only: [ :index, :show ]
+      end
+    end
+  end
+
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
@@ -110,6 +121,9 @@ Rails.application.routes.draw do
 
   # Notification preferences (doesn't require password like Devise profile updates)
   resource :notification_preferences, only: [ :update ]
+
+  # Personal API tokens for /api/v1 access (destroy revokes rather than deletes)
+  resources :api_tokens, only: [ :index, :create, :destroy ]
 
   # Defines the root path route ("/")
   root "root#show"

@@ -10,9 +10,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_04_170722) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_19_163926) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "api_tokens", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "last_used_at"
+    t.string "name", null: false
+    t.datetime "revoked_at"
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["token_digest"], name: "index_api_tokens_on_token_digest", unique: true
+    t.index ["user_id"], name: "index_api_tokens_on_user_id"
+  end
 
   create_table "conference_program_roles", force: :cascade do |t|
     t.bigint "conference_program_id", null: false
@@ -258,6 +270,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_04_170722) do
     t.index ["user_id"], name: "index_volunteer_signups_on_user_id"
   end
 
+  add_foreign_key "api_tokens", "users"
   add_foreign_key "conference_program_roles", "conference_programs"
   add_foreign_key "conference_program_roles", "users"
   add_foreign_key "conference_programs", "conferences"

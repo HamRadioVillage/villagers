@@ -122,6 +122,8 @@ class User < ApplicationRecord
   has_many :timeslots, through: :volunteer_signups
   # Notification associations
   has_many :notifications, dependent: :destroy
+  # API access
+  has_many :api_tokens, dependent: :destroy
 
   # Role checking methods
   def village_admin?
