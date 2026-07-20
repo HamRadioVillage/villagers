@@ -8,7 +8,7 @@ class ConvertDayScheduleKeysToDates < ActiveRecord::Migration[8.1]
   # code. Idempotent: date-looking keys pass through untouched.
   def up
     say_with_time "re-keying conference_programs.day_schedules by calendar date" do
-      execute(<<~SQL.squish).each do |row|
+      select_all(<<~SQL.squish).each do |row|
         SELECT cp.id, cp.day_schedules, c.start_date
         FROM conference_programs cp
         JOIN conferences c ON c.id = cp.conference_id
