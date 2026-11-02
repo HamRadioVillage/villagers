@@ -2,6 +2,10 @@
 require "rubygems"
 require "bundler/setup"
 
+# --ensure-latest makes Brakeman exit 5 *before scanning* whenever a newer
+# release exists, printing only "Brakeman X is not the latest version Y".
+# When CI's scan_ruby fails that way, bump brakeman in Gemfile.lock — it is
+# not a vulnerability report.
 ARGV.unshift("--ensure-latest")
 
 load Gem.bin_path("brakeman", "brakeman")
