@@ -40,7 +40,7 @@ jobs:
 
       # Pin to a commit SHA, never @main: this action runs with write access
       # to this repo and can mint Anthropic tokens on the org's behalf.
-      - uses: HamRadioVillage/agent-policy/.github/actions/agent-fix@d88b3ba88b5e44d04d18077c268cdd829b027bd2
+      - uses: HamRadioVillage/agent-policy/.github/actions/agent-fix@543df8ed462a4fadb828639476cd2b65400a66d1
         with:
           issue_number: ${{ github.event.issue.number }}
           # Identifiers, not secrets - no ANTHROPIC_API_KEY anywhere. The
@@ -51,6 +51,13 @@ jobs:
           anthropic_organization_id: ${{ vars.ANTHROPIC_ORGANIZATION_ID }}
           anthropic_service_account_id: ${{ vars.ANTHROPIC_SERVICE_ACCOUNT_ID }}
           base_branch: main
+          # This repo is a fork of livitup/villagers and its work is
+          # meant to go upstream. Uncommenting this sends every agent
+          # PR there instead of here - a public contribution to a
+          # project this org does not own. Read section 5 of the
+          # playbook before you do, and watch a few runs land here
+          # first.
+          # pr_target_repo: livitup/villagers
           allowed_tools: >-
             Read,Write,Edit,Glob,Grep,
             Bash(git:*),Bash(gh issue:*),Bash(gh pr:*),
