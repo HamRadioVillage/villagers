@@ -40,7 +40,7 @@ jobs:
 
       # Pin to a commit SHA, never @main: this action runs with write access
       # to this repo and can mint Anthropic tokens on the org's behalf.
-      - uses: HamRadioVillage/agent-policy/.github/actions/agent-fix@543df8ed462a4fadb828639476cd2b65400a66d1
+      - uses: HamRadioVillage/agent-policy/.github/actions/agent-fix@057224245ecb1d6ec8a4964140622707e6b36119
         with:
           issue_number: ${{ github.event.issue.number }}
           # Identifiers, not secrets - no ANTHROPIC_API_KEY anywhere. The
