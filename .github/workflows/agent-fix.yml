@@ -1,0 +1,58 @@
+# HamRadioVillage/villagers -> .github/workflows/agent-fix.yml
+#
+# First target: public (free Actions minutes, a bad PR costs nothing to
+# close) AND it has a real test suite, which urfd does not.
+name: Agent fix
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write          # mint the OIDC token the agent auth exchanges
+
+concurrency:
+  group: agent-issue-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  fix:
+    if: github.event.label.name == 'agent:triage'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # .ruby-version pins ruby-3.4.1, which the runner image does not carry
+      # (it has 3.2.11 / 3.3.13 / 3.4.12). This is why the central piece is a
+      # composite action and not a reusable workflow.
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      # ci.yml installs this for the JS build in its test job.
+      - run: sudo apt-get update && sudo apt-get install --no-install-recommends -y node-gyp
+
+      # Pin to a commit SHA, never @main: this action runs with write access
+      # to this repo and can mint Anthropic tokens on the org's behalf.
+      - uses: HamRadioVillage/agent-policy/.github/actions/agent-fix@d88b3ba88b5e44d04d18077c268cdd829b027bd2
+        with:
+          issue_number: ${{ github.event.issue.number }}
+          # Identifiers, not secrets - no ANTHROPIC_API_KEY anywhere. The
+          # federation rule is pinned to
+          # repo:HamRadioVillage/villagers:ref:refs/heads/main, so a token
+          # minted here cannot be replayed from another repo or a fork.
+          anthropic_federation_rule_id: ${{ vars.ANTHROPIC_FEDERATION_RULE_ID }}
+          anthropic_organization_id: ${{ vars.ANTHROPIC_ORGANIZATION_ID }}
+          anthropic_service_account_id: ${{ vars.ANTHROPIC_SERVICE_ACCOUNT_ID }}
+          base_branch: main
+          allowed_tools: >-
+            Read,Write,Edit,Glob,Grep,
+            Bash(git:*),Bash(gh issue:*),Bash(gh pr:*),
+            Bash(bundle:*),Bash(bin/rails:*),Bash(bin/rubocop:*),
+            Bash(bin/brakeman:*),Bash(bin/bundler-audit)
